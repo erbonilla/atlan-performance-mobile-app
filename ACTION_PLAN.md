@@ -92,7 +92,12 @@ Derived from `atlan-initial-project-setup-prompt.md` (primary) and `docs/` (dept
 
 ## Known limitations (this environment)
 - Some KMP→Swift generated signatures (async suspend wrappers, enum case names) are centralized in `SharedContainer.swift` if they need adjustment after a framework rebuild.
-- Fake in-memory repositories only; no persistence, sync, or notifications (by design for this milestone).
+- Most repositories are still fake in-memory (profile/plan/session/why/swap); the **sync queue is now real SQLDelight** (see below). No remote sync or notifications yet (by design).
+
+## Offline persistence core (Phase 2 — started)
+- [x] **SQLDelight foundation, verified on all three platforms.** Wired the `app.cash.sqldelight` plugin + drivers into the version catalog and shared `build.gradle.kts`; declared it at the root with `apply false` to stop its transitive Kotlin Gradle plugin from **downgrading** KGP (that was the one real snag — it broke the `compilerOptions { jvmTarget }` DSL until pinned). Schema in `SyncQueue.sq` → generated `AtlanDatabase`. Cross-platform `expect/actual DatabaseDriverFactory` (Android `AndroidSqliteDriver(context)`, iOS `NativeSqliteDriver`, JVM `JdbcSqliteDriver(IN_MEMORY)`); iOS links system `libsqlite3` (`-lsqlite3` in `project.yml` — the static framework leaves `sqlite3_*` undefined otherwise).
+- [x] **Sync queue migrated to durable storage** (`SqlDelightSyncQueueRepository` replaces `FakeSyncQueueRepository` in `AtlanShared`; `AtlanShared(databaseDriverFactory)` now takes a driver, provided by each platform). `markSynced` is the drain primitive. Payload `Map<String,String>` encoded with RS/US separators (dependency-free).
+- [x] **Verified:** `:shared:jvmTest` (6 tests — 4 original + new `SyncQueuePersistenceTest` proving an item is readable from a *second* repo on the same DB + drops out of `pending()` once synced); `:androidApp:compileDebugKotlin`; **iOS `xcodebuild` BUILD SUCCEEDED** (sim) with the native SQLite driver linked.
 
 ## Next recommended milestone
-Framework-doc **Phase 2 — Offline session core**: replace fake repositories with a real local database (SQLDelight in `shared`, or Room/SwiftData adapters), wire platform time into sync-queue items, and add the sync-queue drain workers (WorkManager / BackgroundTasks).
+Continue Phase 2: migrate the remaining repositories (profile/plan/session) to SQLDelight following the sync-queue pattern; **persist active-session/timer state** to unblock Returning-User Resume + Session Recovery; add the sync-queue **drain workers** (WorkManager / BackgroundTasks) + a remote API; offload DB calls to a background dispatcher (`kotlinx-coroutines-core`).

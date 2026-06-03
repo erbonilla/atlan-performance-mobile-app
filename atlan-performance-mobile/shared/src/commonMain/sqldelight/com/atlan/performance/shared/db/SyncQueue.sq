@@ -1,0 +1,28 @@
+-- Offline write queue, persisted locally (source of truth). A platform worker
+-- (WorkManager / BackgroundTasks) drains this later; rows survive process death.
+-- `payload` is an opaque encoded string of the original Map<String,String>.
+CREATE TABLE syncQueueItem (
+    id           TEXT NOT NULL PRIMARY KEY,
+    operation    TEXT NOT NULL,
+    payload      TEXT NOT NULL,
+    createdAtIso TEXT NOT NULL,
+    state        TEXT NOT NULL
+);
+
+CREATE INDEX syncQueueItem_state ON syncQueueItem(state);
+
+enqueue:
+INSERT OR REPLACE INTO syncQueueItem(id, operation, payload, createdAtIso, state)
+VALUES (?, ?, ?, ?, ?);
+
+selectPending:
+SELECT * FROM syncQueueItem WHERE state != 'SYNCED' ORDER BY createdAtIso;
+
+selectAll:
+SELECT * FROM syncQueueItem ORDER BY createdAtIso;
+
+updateState:
+UPDATE syncQueueItem SET state = :state WHERE id = :id;
+
+deleteSynced:
+DELETE FROM syncQueueItem WHERE state = 'SYNCED';

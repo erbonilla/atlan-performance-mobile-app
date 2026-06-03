@@ -13,7 +13,7 @@ import Shared
 /// or `kdoctor` scaffolds this. The Swift code below assumes the generated `Shared` module.
 @MainActor
 final class SharedContainer: ObservableObject {
-    let shared = AtlanShared()
+    let shared = AtlanShared(databaseDriverFactory: DatabaseDriverFactory())
 
     func todayDashboard() async -> DashboardState? {
         try? await shared.getTodayDashboard.invoke(

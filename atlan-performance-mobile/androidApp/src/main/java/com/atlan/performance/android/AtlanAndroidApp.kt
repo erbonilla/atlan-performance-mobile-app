@@ -9,10 +9,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import com.atlan.performance.android.design.AtlanTheme
 import com.atlan.performance.android.navigation.AtlanNavGraph
 import com.atlan.performance.android.screen.AtlanSplash
 import com.atlan.performance.shared.AtlanShared
+import com.atlan.performance.shared.db.DatabaseDriverFactory
 
 /**
  * Root composable. Creates the shared core once (fake repositories are seeded on construction —
@@ -21,7 +23,8 @@ import com.atlan.performance.shared.AtlanShared
  */
 @Composable
 fun AtlanAndroidApp() {
-    val shared = remember { AtlanShared() }
+    val context = LocalContext.current
+    val shared = remember { AtlanShared(DatabaseDriverFactory(context.applicationContext)) }
     var splashDone by remember { mutableStateOf(false) }
     AtlanTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { padding ->

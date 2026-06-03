@@ -26,6 +26,9 @@ settings:
       - $(inherited)
       - -framework
       - Shared
+      # SQLDelight's native driver (touchlab/sqliter) calls system SQLite; the static Shared
+      # framework leaves these symbols undefined, so the app must link libsqlite3.
+      - -lsqlite3
 
 targets:
   AtlanPerformance:

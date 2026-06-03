@@ -15,5 +15,11 @@ class FakeSyncQueueRepository : SyncQueueRepository {
         items += item
     }
 
-    override suspend fun pending(): List<SyncQueueItem> = items.toList()
+    override suspend fun pending(): List<SyncQueueItem> =
+        items.filter { it.state != com.atlan.performance.shared.data.sync.SyncState.SYNCED }
+
+    override suspend fun markSynced(id: String) {
+        val idx = items.indexOfFirst { it.id == id }
+        if (idx >= 0) items[idx] = items[idx].copy(state = com.atlan.performance.shared.data.sync.SyncState.SYNCED)
+    }
 }
