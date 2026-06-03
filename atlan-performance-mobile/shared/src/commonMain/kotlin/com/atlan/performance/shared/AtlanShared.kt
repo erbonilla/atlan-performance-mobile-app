@@ -52,6 +52,10 @@ class AtlanShared(databaseDriverFactory: DatabaseDriverFactory) {
     // No backend in this milestone — a simulated uploader stands in for the real API (see SyncUploader).
     private val syncUploader = SimulatedSyncUploader()
 
+    // Spec-scaffolded (setup prompt §17): persists language + the full AthletePersona from calibration.
+    // The shipped UI uses a lighter, prefs-based onboarding (Profile Setup), so this isn't wired yet —
+    // it activates when the full 4-question calibration lands and collects a complete OnboardingState.
+    // Kept (not dead code) because §16/§17 require these models + use case to exist.
     val completeOnboarding = CompleteOnboardingUseCase(userProfileRepository)
     val getTodayDashboard = GetTodayDashboardUseCase(sessionRepository, trainingPlanRepository)
     val getTodaySession = GetTodaySessionUseCase(sessionRepository)
