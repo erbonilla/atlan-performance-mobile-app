@@ -1,0 +1,21 @@
+*.iml
+.gradle/
+build/
+local.properties
+.idea/
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Kotlin
+.kotlin/
+
+# iOS / Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+.swiftpm/
+Pods/
+# Xcode project is generated from iosApp/project.yml via XcodeGen — regenerate, don't commit.
+*.xcodeproj

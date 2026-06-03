@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base Activity theme. Visual language is driven by Compose AtlanTheme; this only provides a
+         non-Material splash background so the app opens on a calm Foam surface. -->
+    <style name="Theme.AtlanPerformance" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#F4FAFB</item>
+        <item name="android:windowBackground">#F4FAFB</item>
+    </style>
+</resources>

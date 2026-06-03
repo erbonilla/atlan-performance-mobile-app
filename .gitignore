@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Android / Gradle / Kotlin build artifacts (also covered in atlan-performance-mobile/.gitignore)
+*.iml
+.gradle/
+build/
+local.properties
+.idea/
+.externalNativeBuild/
+.cxx/
+captures/
+.kotlin/
+
+# iOS / Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+.swiftpm/
+Pods/
+# The .xcodeproj is generated from iosApp/project.yml via XcodeGen — regenerate, don't commit.
+*.xcodeproj
