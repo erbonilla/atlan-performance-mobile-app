@@ -7,11 +7,13 @@ struct TodayDashboardView: View {
     @EnvironmentObject private var container: SharedContainer
     @EnvironmentObject private var coordinator: AppCoordinator
     @State private var state: DashboardState?
+    @State private var resumable: SessionProgress?
 
     var body: some View {
         ScrollView {
             VStack(spacing: AtlanSpacing.lg) {
                 header
+                if let p = resumable { resumeBanner(p) }
                 if let s = state {
                     if let session = s.todaySession { todayCard(s, session) }
                     weeklyArcCard(s.weeklyArc)
@@ -33,7 +35,40 @@ struct TodayDashboardView: View {
         }
         .background(AtlanColors.foamWarm.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
-        .task { state = await container.todayDashboard() }
+        .task {
+            state = await container.todayDashboard()
+            resumable = await container.loadSessionProgress()
+        }
+    }
+
+    /// Calm offer to pick up an interrupted session — never a "you stopped" nudge. Resume or discard.
+    private func resumeBanner(_ p: SessionProgress) -> some View {
+        let es = coordinator.language == .es
+        return VStack(alignment: .leading, spacing: AtlanSpacing.sm) {
+            Text(es ? "Reanudar sesión · Serie \(p.setIndex) de \(p.setCount)"
+                    : "Resume session · Set \(p.setIndex) of \(p.setCount)")
+                .foregroundColor(AtlanColors.tideDeep)
+            HStack(spacing: AtlanSpacing.md) {
+                AtlanButton(title: es ? "Reanudar" : "Resume", coral: true) {
+                    coordinator.wetResume = true
+                    coordinator.go(.wetMode)
+                }
+                Button {
+                    let id = p.sessionId
+                    resumable = nil
+                    Task { await container.clearSessionProgress(id) }
+                } label: {
+                    Text(es ? "Descartar" : "Discard")
+                        .foregroundColor(AtlanColors.tideDeep)
+                        .frame(minHeight: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(AtlanPressStyle())
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AtlanSpacing.lg)
+        .background(AtlanColors.tidePale)
+        .clipShape(RoundedRectangle(cornerRadius: AtlanRadii.lg))
     }
 
     private var header: some View {

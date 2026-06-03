@@ -42,6 +42,9 @@ final class AppCoordinator: ObservableObject {
         didSet { defaults.set(wetModeTutorialSeen, forKey: Keys.tutorialSeen) }
     }
 
+    // Transient: true when Wet Mode should rebuild from a saved snapshot (resume) vs start fresh.
+    var wetResume = false
+
     // Modal sheets.
     @Published var whyConceptKey: String? = nil
     @Published var swapperSessionId: String? = nil

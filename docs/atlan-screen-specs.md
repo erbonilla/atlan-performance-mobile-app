@@ -859,6 +859,59 @@ bilingual ✓ · built green on both platforms ✓.
 
 ---
 
+## 17. Resume / Session Recovery (dashboard banner)
+
+### Purpose
+Let a returning user pick up a session that was interrupted (app closed or killed mid-workout) —
+resume or discard, both calm equals. Backed by **durable local persistence**, so it survives process
+death (the "Session Recovery" need) without a launch interstitial.
+
+### Entry Points
+A banner at the top of the Today Dashboard, shown only when a saved in-progress snapshot exists
+(`LoadSessionProgress` returns non-null on dashboard load).
+
+### Exit Points
+**Resume** → Wet Mode in resume mode (rebuilds the timer at the interrupted set). **Discard** → clears
+the snapshot (`ClearSessionProgress`) and hides the banner.
+
+### Layout
+TidePale card: "Resume session · Set X of N" / "Reanudar sesión · Serie X de N" → Coral **Resume** +
+text **Discard**.
+
+### Content / State
+`SessionProgress` (`sessionId`, `setIndex`, `setCount`, `completedCount`, `restSeconds`) from the
+SQLDelight `sessionProgress` table. Wet Mode **saves** the snapshot at set granularity (on each set
+complete / pause / rest transition) and **clears** it when the session reaches `COMPLETED_SESSION`
+(full or ended-early). So a snapshot lingers only when the app was left/killed mid-session.
+
+### Behaviour notes
+- Resuming rebuilds via `ResumeWorkoutTimerUseCase`: a READY timer at `setIndex` with `completedCount`
+  preserved; the interrupted set **starts fresh** (no time accrues while the app was closed — correct
+  for interval training). The rest preference is restored from the snapshot.
+- This is intentionally a dashboard banner, not a launch interstitial — a promote-to-launch screen is
+  a small follow-up and avoids entangling onboarding routing.
+
+### States
+- None pending → no banner.
+- Pending → banner with Resume/Discard.
+- No async error path (local DB).
+
+### Accessibility
+Resume is the Coral primary; Discard is a ≥44/48 `Role.Button`. Copy is neutral — never implies failure.
+
+### iOS Notes
+`TodayDashboardView.resumeBanner` (`container.loadSessionProgress()` / `clearSessionProgress`);
+`coordinator.wetResume` gates the Wet Mode `.task` rebuild.
+### Android Notes
+`TodayDashboardScreen` resume banner; `wetResume` nav flag selects resume vs fresh in `WetModeScreen`.
+
+### QA Checklist
+Survives process death (snapshot in SQLite) ✓ · resume rebuilds at the right set with prior sets still
+counted ✓ · discard clears ✓ · finishing a session clears ✓ · calm, no failure framing ✓ · proven by
+`SessionProgressPersistenceTest` + built green on both platforms ✓.
+
+---
+
 ## Coverage matrix
 
 | Screen | Loading | Empty | Error | Disabled | Success | Notes |
@@ -878,6 +931,7 @@ bilingual ✓ · built green on both platforms ✓.
 | Session Swapper | ✓ | — | — | ✓ (accepting) | dismiss | crash fixed |
 | Settings | — | — | — | — | live controls + display | language/haptics/keep-awake/rest persist; How-It-Works entry |
 | How It Works (§16) | — | — | — | — | content | primer + pace explanation; bilingual |
+| Resume / Recovery (§17) | — | (no banner) | — | — | resume / discard | dashboard banner; SQLite-backed, survives process death |
 | Generic Error (§13) | — | — | ✓ (reusable) | — | retry / safe exit | wired to Session Detail; unreachable with fakes |
 
 "Error" states remain intentionally absent across onboarding/dashboard: offline-missing content is a

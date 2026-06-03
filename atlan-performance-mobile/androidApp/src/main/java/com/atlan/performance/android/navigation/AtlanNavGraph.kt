@@ -42,6 +42,8 @@ fun AtlanNavGraph(shared: AtlanShared) {
     var hapticsEnabled by remember { mutableStateOf(prefs.getBoolean("haptics", true)) }
     var keepAwake by remember { mutableStateOf(prefs.getBoolean("keepAwake", true)) }
     var restSeconds by remember { mutableStateOf(prefs.getInt("restSeconds", 30)) }
+    // True when Wet Mode should rebuild from a saved snapshot (resume) rather than start fresh.
+    var wetResume by remember { mutableStateOf(false) }
 
     fun setLanguage(value: Language) {
         language = value
@@ -88,6 +90,7 @@ fun AtlanNavGraph(shared: AtlanShared) {
             onWhy = { key -> whyConceptKey = key },
             onOpenSwapper = { sessionId -> swapperForSessionId = sessionId },
             onViewPlan = { route = AtlanRoute.WORKOUT_PLAN },
+            onResume = { wetResume = true; route = AtlanRoute.WET_MODE },
             onSettings = { route = AtlanRoute.SETTINGS }
         )
 
@@ -110,7 +113,7 @@ fun AtlanNavGraph(shared: AtlanShared) {
             shared = shared,
             language = language,
             onBack = { route = AtlanRoute.SESSION_DETAIL },
-            onBegin = { route = AtlanRoute.WET_MODE }
+            onBegin = { wetResume = false; route = AtlanRoute.WET_MODE }
         )
 
         AtlanRoute.WET_MODE -> WetModeScreen(
@@ -121,7 +124,8 @@ fun AtlanNavGraph(shared: AtlanShared) {
             onTutorialSeen = { markTutorialSeen() },
             hapticsEnabled = hapticsEnabled,
             keepScreenAwake = keepAwake,
-            restSeconds = restSeconds
+            restSeconds = restSeconds,
+            resume = wetResume
         )
 
         AtlanRoute.SETTINGS -> SettingsScreen(

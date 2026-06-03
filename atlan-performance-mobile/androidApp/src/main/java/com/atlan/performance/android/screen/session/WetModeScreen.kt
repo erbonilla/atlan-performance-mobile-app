@@ -75,7 +75,8 @@ fun WetModeScreen(
     onTutorialSeen: () -> Unit = {},
     hapticsEnabled: Boolean = true,
     keepScreenAwake: Boolean = true,
-    restSeconds: Int = 30
+    restSeconds: Int = 30,
+    resume: Boolean = false
 ) {
     // Copy resolves through the shared bilingual layer so ES is first-class on the wet-hands surface.
     fun copy(key: LocalizedStringKey) = AtlanCopy.get(key, language)
@@ -103,7 +104,20 @@ fun WetModeScreen(
     LaunchedEffect(Unit) {
         val session = shared.getTodaySession()?.session ?: return@LaunchedEffect
         now = monoNow()
-        timer = shared.startWorkoutTimer(session, 1, 105_000L, restSeconds * 1000L, OfflineStatus.OFFLINE_USABLE).started(now)
+        // Resume from a saved snapshot (after relaunch/recovery) or start fresh.
+        val progress = if (resume) shared.loadSessionProgress() else null
+        timer = if (progress != null && progress.sessionId == session.id) {
+            shared.resumeWorkoutTimer(session, progress).started(now)
+        } else {
+            shared.startWorkoutTimer(session, 1, 105_000L, restSeconds * 1000L, OfflineStatus.OFFLINE_USABLE).started(now)
+        }
+    }
+
+    // Persist progress at set granularity (survives process death); clear once the session finishes.
+    LaunchedEffect(timer?.setIndex, timer?.completedCount, timer?.isComplete) {
+        val t = timer ?: return@LaunchedEffect
+        if (t.isComplete) shared.clearSessionProgress(t.sessionId)
+        else shared.saveSessionProgress(t, restSeconds)
     }
 
     // 1s monotonic ticker — ACTIVE→OVERTIME at zero; REST auto-starts the next set at zero.

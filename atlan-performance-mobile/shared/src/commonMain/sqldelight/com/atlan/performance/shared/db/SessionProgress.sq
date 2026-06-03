@@ -1,0 +1,24 @@
+-- Snapshot of an in-progress Wet Mode session, persisted locally so it survives process death and
+-- can be resumed (Returning User Resume / Session Recovery). Cleared when the session finishes.
+-- We resume at the start of the interrupted set: time does not accrue while the app is closed.
+CREATE TABLE sessionProgress (
+    sessionId      TEXT NOT NULL PRIMARY KEY,
+    setIndex       INTEGER NOT NULL,
+    setCount       INTEGER NOT NULL,
+    completedCount INTEGER NOT NULL,
+    restSeconds    INTEGER NOT NULL,
+    savedAtIso     TEXT NOT NULL
+);
+
+upsert:
+INSERT OR REPLACE INTO sessionProgress(sessionId, setIndex, setCount, completedCount, restSeconds, savedAtIso)
+VALUES (?, ?, ?, ?, ?, ?);
+
+selectActive:
+SELECT * FROM sessionProgress ORDER BY savedAtIso DESC LIMIT 1;
+
+deleteBySession:
+DELETE FROM sessionProgress WHERE sessionId = ?;
+
+deleteAll:
+DELETE FROM sessionProgress;

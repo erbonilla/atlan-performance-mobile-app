@@ -68,6 +68,10 @@ struct WetModeView: View {
         .accessibilityAction(named: localized(.wetModeActionPause, lang)) { togglePause() }
         .accessibilityAction(named: localized(.wetModeActionExit, lang)) { requestExit() }
         .onReceive(ticker) { _ in tick() }
+        // Persist progress at set granularity (survives process death); clear once the session finishes.
+        .onChange(of: timer.map { "\($0.setIndex)/\($0.completedCount)/\($0.isComplete)" } ?? "") { _ in
+            persistProgress()
+        }
         .confirmationDialog(localized(.wetModeEarlyTitle, lang), isPresented: $showEarlyConfirm,
                             titleVisibility: .visible) {
             Button(localized(.wetModeEarlyConfirm, lang)) { performComplete() }
@@ -87,8 +91,22 @@ struct WetModeView: View {
         .task {
             if timer == nil, let session = await container.todaySession()?.session {
                 nowMs = monoNow()
-                timer = container.startTimer(for: session, restSeconds: coordinator.restSeconds).started(nowMs: nowMs)
+                // Resume from a saved snapshot (recovery) or start fresh.
+                let progress = coordinator.wetResume ? await container.loadSessionProgress() : nil
+                if let p = progress, p.sessionId == session.id {
+                    timer = container.resumeTimer(for: session, progress: p).started(nowMs: nowMs)
+                } else {
+                    timer = container.startTimer(for: session, restSeconds: coordinator.restSeconds).started(nowMs: nowMs)
+                }
             }
+        }
+    }
+
+    private func persistProgress() {
+        guard let t = timer else { return }
+        Task {
+            if t.isComplete { await container.clearSessionProgress(t.sessionId) }
+            else { await container.saveSessionProgress(t, restSeconds: coordinator.restSeconds) }
         }
     }
 

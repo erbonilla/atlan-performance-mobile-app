@@ -17,8 +17,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,8 +41,10 @@ import com.atlan.performance.android.design.AtlanPalette
 import com.atlan.performance.android.design.AtlanType
 import com.atlan.performance.shared.AtlanShared
 import com.atlan.performance.shared.domain.model.Language
+import com.atlan.performance.shared.domain.model.SessionProgress
 import com.atlan.performance.shared.presentation.DashboardState
 import com.atlan.performance.shared.presentation.WeeklyArcState
+import kotlinx.coroutines.launch
 
 /**
  * Today Dashboard — calm, answers only "what is today?" and "is the week on track?". No streaks,
@@ -51,11 +58,16 @@ fun TodayDashboardScreen(
     onWhy: (String) -> Unit,
     onOpenSwapper: (String) -> Unit,
     onViewPlan: () -> Unit,
+    onResume: () -> Unit,
     onSettings: () -> Unit
 ) {
     val state: DashboardState? by produceState<DashboardState?>(initialValue = null) {
         value = shared.getTodayDashboard()
     }
+    // A saved in-progress session (survived process death) → offer calm Resume / Discard.
+    val scope = rememberCoroutineScope()
+    var resumable by remember { mutableStateOf<SessionProgress?>(null) }
+    LaunchedEffect(Unit) { resumable = shared.loadSessionProgress() }
 
     Column(
         modifier = Modifier
@@ -84,6 +96,40 @@ fun TodayDashboardScreen(
                 color = AtlanPalette.TideDeep,
                 fontSize = 20.sp
             )
+        }
+
+        // Resume banner — a calm offer to pick up an interrupted session, never a "you stopped" nudge.
+        resumable?.let { p ->
+            val es = language == Language.ES
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(AtlanPalette.TidePale)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    (if (es) "Reanudar sesión · Serie ${p.setIndex} de ${p.setCount}"
+                    else "Resume session · Set ${p.setIndex} of ${p.setCount}"),
+                    color = AtlanPalette.TideDeep
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    AtlanButton(text = if (es) "Reanudar" else "Resume", onClick = onResume, coral = true)
+                    Text(
+                        if (es) "Descartar" else "Discard",
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .clickable {
+                                scope.launch { shared.clearSessionProgress(p.sessionId) }
+                                resumable = null
+                            }
+                            .wrapContentSize(Alignment.Center)
+                            .semantics { role = Role.Button },
+                        color = AtlanPalette.TideDeep
+                    )
+                }
+            }
         }
 
         val s = state ?: return@Column

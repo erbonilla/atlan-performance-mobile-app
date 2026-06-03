@@ -62,4 +62,22 @@ final class SharedContainer: ObservableObject {
             offlineStatus: .offlineUsable
         )
     }
+
+    // MARK: Active-session persistence (resume / recovery)
+
+    func loadSessionProgress() async -> SessionProgress? {
+        try? await shared.loadSessionProgress.invoke()
+    }
+
+    func saveSessionProgress(_ timer: WorkoutTimerState, restSeconds: Int) async {
+        try? await shared.saveSessionProgress.invoke(timer: timer, restSeconds: Int32(restSeconds), savedAtIso: "")
+    }
+
+    func clearSessionProgress(_ sessionId: String) async {
+        try? await shared.clearSessionProgress.invoke(sessionId: sessionId)
+    }
+
+    func resumeTimer(for session: TrainingSession, progress: SessionProgress) -> WorkoutTimerState {
+        shared.resumeWorkoutTimer.invoke(session: session, progress: progress, setDurationMs: 105_000)
+    }
 }

@@ -51,6 +51,7 @@ struct WorkoutPrepView: View {
 
                     Spacer(minLength: AtlanSpacing.xxl)
                     AtlanButton(title: isES ? "Empezar sesión" : "Begin session", coral: true) {
+                        coordinator.wetResume = false
                         coordinator.go(.wetMode)
                     }
                 } else {
