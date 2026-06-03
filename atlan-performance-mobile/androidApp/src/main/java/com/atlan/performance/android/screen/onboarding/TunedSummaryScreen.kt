@@ -26,7 +26,7 @@ import com.atlan.performance.shared.localization.LocalizedStringKey
  * first session preview, then navigates to the Today Dashboard.
  */
 @Composable
-fun TunedSummaryScreen(language: Language, onSeeFirstSession: () -> Unit) {
+fun TunedSummaryScreen(language: Language, name: String = "", onSeeFirstSession: () -> Unit) {
     val es = language == Language.ES
     fun copy(key: LocalizedStringKey) = AtlanCopy.get(key, language)
 
@@ -50,7 +50,11 @@ fun TunedSummaryScreen(language: Language, onSeeFirstSession: () -> Unit) {
             .padding(AtlanSpacing.xl.dp)
     ) {
         Text(
-            (if (es) "Afinado a tu semana" else "Tuned to your week").uppercase(),
+            (if (name.isNotBlank()) {
+                if (es) "Afinado para ti, $name" else "Tuned for you, $name"
+            } else {
+                if (es) "Afinado a tu semana" else "Tuned to your week"
+            }).uppercase(),
             style = AtlanType.Label, color = AtlanPalette.TideDeep
         )
         Text(

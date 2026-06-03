@@ -16,6 +16,9 @@ final class AppCoordinator: ObservableObject {
         static let keepAwake = "pref.keepAwake"
         static let tutorialSeen = "pref.wetTutorialSeen"
         static let restSeconds = "pref.restSeconds"
+        static let onboardingComplete = "pref.onboardingComplete"
+        static let profileName = "pref.profileName"
+        static let trainingLevel = "pref.trainingLevel"
     }
 
     private let defaults = UserDefaults.standard
@@ -45,6 +48,15 @@ final class AppCoordinator: ObservableObject {
     // Transient: true when Wet Mode should rebuild from a saved snapshot (resume) vs start fresh.
     var wetResume = false
 
+    // Lightweight onboarding profile (optional). Stored locally; no account/backend.
+    @Published var profileName: String = "" {
+        didSet { defaults.set(profileName, forKey: Keys.profileName) }
+    }
+    @Published var trainingLevel: String = "" {
+        didSet { defaults.set(trainingLevel, forKey: Keys.trainingLevel) }
+    }
+    private(set) var onboardingComplete = false
+
     // Modal sheets.
     @Published var whyConceptKey: String? = nil
     @Published var swapperSessionId: String? = nil
@@ -56,11 +68,28 @@ final class AppCoordinator: ObservableObject {
         if defaults.object(forKey: Keys.keepAwake) != nil { keepScreenAwake = defaults.bool(forKey: Keys.keepAwake) }
         if defaults.object(forKey: Keys.restSeconds) != nil { restSeconds = defaults.integer(forKey: Keys.restSeconds) }
         wetModeTutorialSeen = defaults.bool(forKey: Keys.tutorialSeen)
+        profileName = defaults.string(forKey: Keys.profileName) ?? ""
+        trainingLevel = defaults.string(forKey: Keys.trainingLevel) ?? ""
+        onboardingComplete = defaults.bool(forKey: Keys.onboardingComplete)
+        // Returning users skip onboarding (App Bootstrap): open straight on the Dashboard.
+        if onboardingComplete { path = [.dashboard] }
     }
 
     func selectLanguage(_ language: Language) {
         self.language = language
         path = [.welcome]
+    }
+
+    /// Persist the optional onboarding profile.
+    func saveProfile(name: String, level: String) {
+        profileName = name
+        trainingLevel = level
+    }
+
+    /// Mark onboarding finished so future launches skip straight to the Dashboard.
+    func completeOnboarding() {
+        onboardingComplete = true
+        defaults.set(true, forKey: Keys.onboardingComplete)
     }
 
     func go(_ route: AppRoute) { path.append(route) }

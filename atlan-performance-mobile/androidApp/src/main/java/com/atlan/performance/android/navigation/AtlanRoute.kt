@@ -9,6 +9,7 @@ enum class AtlanRoute {
     LANGUAGE,
     WELCOME,
     CALIBRATION,
+    PROFILE_SETUP,
     TUNED_SUMMARY,
     DASHBOARD,
     WORKOUT_PLAN,

@@ -13,6 +13,7 @@ import com.atlan.performance.android.screen.ProgressScreen
 import com.atlan.performance.android.screen.dashboard.TodayDashboardScreen
 import com.atlan.performance.android.screen.onboarding.CalibrationScreen
 import com.atlan.performance.android.screen.onboarding.LanguageSelectionScreen
+import com.atlan.performance.android.screen.onboarding.ProfileSetupScreen
 import com.atlan.performance.android.screen.onboarding.TunedSummaryScreen
 import com.atlan.performance.android.screen.onboarding.WelcomeScreen
 import com.atlan.performance.android.screen.session.SessionDetailScreen
@@ -36,7 +37,9 @@ fun AtlanNavGraph(shared: AtlanShared) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("atlan_prefs", Context.MODE_PRIVATE) }
 
-    var route by remember { mutableStateOf(AtlanRoute.LANGUAGE) }
+    // Returning users skip onboarding (App Bootstrap): start on the Dashboard when already onboarded.
+    val onboarded = remember { prefs.getBoolean("onboardingComplete", false) }
+    var route by remember { mutableStateOf(if (onboarded) AtlanRoute.DASHBOARD else AtlanRoute.LANGUAGE) }
     var language by remember {
         mutableStateOf(if (prefs.getString("language", "en") == "es") Language.ES else Language.EN)
     }
@@ -44,6 +47,9 @@ fun AtlanNavGraph(shared: AtlanShared) {
     var hapticsEnabled by remember { mutableStateOf(prefs.getBoolean("haptics", true)) }
     var keepAwake by remember { mutableStateOf(prefs.getBoolean("keepAwake", true)) }
     var restSeconds by remember { mutableStateOf(prefs.getInt("restSeconds", 30)) }
+    // Lightweight profile from onboarding (optional). Stored locally; no account/backend.
+    var profileName by remember { mutableStateOf(prefs.getString("profileName", "") ?: "") }
+    var trainingLevel by remember { mutableStateOf(prefs.getString("trainingLevel", "") ?: "") }
     // True when Wet Mode should rebuild from a saved snapshot (resume) rather than start fresh.
     var wetResume by remember { mutableStateOf(false) }
 
@@ -55,6 +61,11 @@ fun AtlanNavGraph(shared: AtlanShared) {
     fun setKeepAwake(value: Boolean) { keepAwake = value; prefs.edit().putBoolean("keepAwake", value).commit() }
     fun setRestSeconds(value: Int) { restSeconds = value; prefs.edit().putInt("restSeconds", value).commit() }
     fun markTutorialSeen() { wetTutorialSeen = true; prefs.edit().putBoolean("tutorialSeen", true).commit() }
+    fun saveProfile(name: String, level: String) {
+        profileName = name; trainingLevel = level
+        prefs.edit().putString("profileName", name).putString("trainingLevel", level).commit()
+    }
+    fun completeOnboarding() { prefs.edit().putBoolean("onboardingComplete", true).commit() }
 
     // Modal overlays, keyed by the concept/session they explain.
     var whyConceptKey by remember { mutableStateOf<String?>(null) }
@@ -77,12 +88,27 @@ fun AtlanNavGraph(shared: AtlanShared) {
         AtlanRoute.CALIBRATION -> CalibrationScreen(
             language = language,
             onBack = { route = AtlanRoute.WELCOME },
-            onContinue = { route = AtlanRoute.TUNED_SUMMARY }
+            onContinue = { route = AtlanRoute.PROFILE_SETUP }
+        )
+
+        AtlanRoute.PROFILE_SETUP -> ProfileSetupScreen(
+            language = language,
+            initialName = profileName,
+            initialLevel = trainingLevel,
+            onBack = { route = AtlanRoute.CALIBRATION },
+            onContinue = { name, level ->
+                saveProfile(name, level)
+                route = AtlanRoute.TUNED_SUMMARY
+            }
         )
 
         AtlanRoute.TUNED_SUMMARY -> TunedSummaryScreen(
             language = language,
-            onSeeFirstSession = { route = AtlanRoute.DASHBOARD }
+            name = profileName,
+            onSeeFirstSession = {
+                completeOnboarding()
+                route = AtlanRoute.DASHBOARD
+            }
         )
 
         AtlanRoute.DASHBOARD -> TodayDashboardScreen(

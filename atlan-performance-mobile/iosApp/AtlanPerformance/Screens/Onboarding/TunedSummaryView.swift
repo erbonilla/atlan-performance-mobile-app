@@ -8,6 +8,13 @@ struct TunedSummaryView: View {
 
     private struct SettingRow: Identifiable { let id = UUID(); let title: String; let detail: String }
 
+    /// Greets by name when the optional Profile Setup name was given.
+    private func eyebrow(_ isES: Bool) -> String {
+        let name = coordinator.profileName.trimmingCharacters(in: .whitespaces)
+        if !name.isEmpty { return isES ? "Afinado para ti, \(name)" : "Tuned for you, \(name)" }
+        return isES ? "Afinado a tu semana" : "Tuned to your week"
+    }
+
     var body: some View {
         let lang = coordinator.language
         let isES = lang == .es
@@ -26,7 +33,7 @@ struct TunedSummaryView: View {
         ZStack {
             AtlanColors.foamWarm.ignoresSafeArea()
             VStack(alignment: .leading, spacing: AtlanSpacing.md) {
-                Text((isES ? "Afinado a tu semana" : "Tuned to your week").uppercased())
+                Text(eyebrow(isES).uppercased())
                     .font(AtlanTypography.label).foregroundColor(AtlanColors.tideDeep)
                 Text(localized(.tunedTitle, lang))
                     .font(AtlanTypography.display).foregroundColor(AtlanColors.abyss)
@@ -46,6 +53,7 @@ struct TunedSummaryView: View {
 
                 Spacer()
                 AtlanButton(title: localized(.tunedCta, lang), coral: true) {
+                    coordinator.completeOnboarding()
                     coordinator.go(.dashboard)
                 }
             }

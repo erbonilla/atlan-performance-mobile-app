@@ -13,10 +13,12 @@ documented inline in the relevant sections and in the cross-cutting notes). Thes
 no-backend scope: fakes/in-memory only, with TODO anchors for the real storage/sync layer.
 
 **Navigation model.** A brief branded launch (§14) precedes a single linear stack: `language →
-welcome → calibration → tunedSummary → dashboard`. From the dashboard, `sessionDetail → workoutPrep →
-wetMode` is the session flow; the dashboard also opens `workoutPlan` (§15, the week's sessions), and
-`settings` opens `howItWorks` (§16). Plus two modal sheets (Why Modal, Session Swapper) presented over
-any screen and a one-time gesture coach mark drawn as an overlay on first Wet Mode entry. The Generic
+welcome → calibration → profileSetup → tunedSummary → dashboard`. **Bootstrap:** returning users
+(onboarding already complete) start straight on the `dashboard`, skipping the onboarding stack (§20).
+From the dashboard, `sessionDetail → workoutPrep → wetMode` is the session flow; the dashboard also
+opens `workoutPlan` (§15, the week's sessions), and `settings` opens `howItWorks` (§16), `history`
+(§18), and `progress` (§19). Plus two modal sheets (Why Modal, Session Swapper) presented over any
+screen and a one-time gesture coach mark drawn as an overlay on first Wet Mode entry. The Generic
 Error surface is not a route — it is a reusable view rendered in place when a screen's load fails
 (currently wired to Session Detail). iOS uses `NavigationStack` + `.sheet`; Android uses a route
 `when(...)` switch + `ModalBottomSheet`. Routes: `AppRoute` (iOS) / `AtlanRoute` (Android), incl.
@@ -1011,6 +1013,57 @@ platforms ✓.
 
 ---
 
+## 20. Profile Setup + bootstrap routing
+
+### Purpose
+A light, **optional** onboarding step that captures a name and training level to tune coaching tone —
+never a score or gate. Plus the **bootstrap** behaviour: returning users skip onboarding and open on
+the Dashboard.
+
+### Entry Points
+In the onboarding flow, between Calibration and Tuned Summary: `Language → Welcome → Calibration →
+profileSetup → tunedSummary → dashboard`. Routes: `PROFILE_SETUP` / `.profileSetup`.
+
+### Exit Points
+"Continue" saves the (optional) name + level and advances to Tuned Summary. Back → Calibration.
+Tuned Summary's CTA now **marks onboarding complete** before going to the Dashboard.
+
+### Bootstrap (App start)
+On launch, if onboarding was completed, the app starts on the **Dashboard**, skipping
+Language→…→Tuned Summary. Android: `AtlanNavGraph` picks the initial route from the
+`onboardingComplete` pref. iOS: `AppCoordinator.init` seeds `path = [.dashboard]`. Language and the
+profile persist, so returning users keep their setup. (A returning user with a saved in-progress
+session lands on the Dashboard, where the §17 Resume banner offers to continue — so no separate launch
+interstitial is needed.)
+
+### Layout
+FoamWarm: eyebrow ("About you"/"Sobre ti") → display title → an "optional, never a grade" line → a
+**Name** text field → **Training level** rows (Beginner/Intermediate/Advanced · color-not-alone ✓) →
+Continue.
+
+### Content / State
+Name + level are stored locally via the platform-prefs adapter (`SharedPreferences` / `UserDefaults`),
+the same store as language/haptics/rest — no account, no backend. Inline bilingual (not yet keyed).
+Tuned Summary greets by name when given ("Tuned for you, {name}").
+
+### States
+Default (empty), name typed, level selected/deselected (toggle). No async; no error path.
+
+### Accessibility
+Level rows are ≥48dp `Role.Button` with `selected` semantics + a ✓ (never color-only). The name field
+is optional and labeled.
+
+### iOS Notes
+`ProfileSetupView`; persists via `AppCoordinator.saveProfile`. ### Android Notes `ProfileSetupScreen`;
+persists via `AtlanNavGraph.saveProfile`.
+
+### QA Checklist
+Optional, no gate/score ✓ · name + level persist ✓ · returning users skip to Dashboard ✓ · language +
+profile survive relaunch ✓ · Tuned Summary greets by name ✓ · bilingual ✓ · built green on both
+platforms ✓.
+
+---
+
 ## Coverage matrix
 
 | Screen | Loading | Empty | Error | Disabled | Success | Notes |
@@ -1033,6 +1086,7 @@ platforms ✓.
 | Resume / Recovery (§17) | — | (no banner) | — | — | resume / discard | dashboard banner; SQLite-backed, survives process death |
 | Workout History (§18) | ✓ | ✓ (calm) | — | — | list | SQLite-backed; newest-first; partials flagged, not failed |
 | Progress Overview (§19) | ✓ | ✓ (calm) | — | — | summary | calm tallies from history; no streak/deficit/red |
+| Profile Setup (§20) | — | — | — | — | nav | optional name+level; persisted; bootstrap skips onboarding |
 | Generic Error (§13) | — | — | ✓ (reusable) | — | retry / safe exit | wired to Session Detail; unreachable with fakes |
 
 "Error" states remain intentionally absent across onboarding/dashboard: offline-missing content is a

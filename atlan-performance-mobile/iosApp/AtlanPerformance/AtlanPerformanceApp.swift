@@ -71,6 +71,7 @@ struct AtlanPerformanceApp: App {
         switch route {
         case .welcome: WelcomeView()
         case .calibration: CalibrationView()
+        case .profileSetup: ProfileSetupView()
         case .tunedSummary: TunedSummaryView()
         case .dashboard: TodayDashboardView()
         case .workoutPlan: WorkoutPlanListView()

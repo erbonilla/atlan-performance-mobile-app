@@ -5,6 +5,7 @@ import Foundation
 enum AppRoute: Hashable {
     case welcome
     case calibration
+    case profileSetup
     case tunedSummary
     case dashboard
     case workoutPlan

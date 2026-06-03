@@ -43,7 +43,7 @@ struct CalibrationView: View {
                 Spacer()
                 // Continue stays enabled (answers are settings, not a gate); selection is optional.
                 AtlanButton(title: isES ? "Continuar" : "Continue") {
-                    coordinator.go(.tunedSummary)
+                    coordinator.go(.profileSetup)
                 }
             }
             .padding(AtlanSpacing.xl)
