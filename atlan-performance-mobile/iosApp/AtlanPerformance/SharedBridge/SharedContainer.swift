@@ -26,6 +26,10 @@ final class SharedContainer: ObservableObject {
         try? await shared.getTodaySession.invoke(offlineStatus: .offlineUsable)
     }
 
+    func trainingWeek() async -> TrainingWeek? {
+        try? await shared.getTrainingPlan.invoke()
+    }
+
     func whyConcept(key: String, language: Language) async -> WhyModalState? {
         try? await shared.getWhyConcept.invoke(conceptKey: key, language: language)
     }

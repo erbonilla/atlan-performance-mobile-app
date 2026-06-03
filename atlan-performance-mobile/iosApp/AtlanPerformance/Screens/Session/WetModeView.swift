@@ -27,6 +27,8 @@ struct WetModeView: View {
     // Offline-resilience surfacing on the summary. Stub until a real sync queue exists.
     @State private var syncState: OfflineStatus = .syncPending
     @State private var syncing = false
+    // Optional post-session reflection (perceived effort). Local-only; TODO(persist) with results.
+    @State private var effort: Int? = nil
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let swipeThreshold: CGFloat = 120
@@ -184,6 +186,7 @@ struct WetModeView: View {
             .clipShape(RoundedRectangle(cornerRadius: AtlanRadii.lg))
             .padding(.horizontal, AtlanSpacing.xl)
 
+            effortRow()
             syncBlock()
             Spacer()
             AtlanButton(title: localized(.wetModeDone, lang), coral: true) { coordinator.pop() }
@@ -193,6 +196,34 @@ struct WetModeView: View {
     }
 
     /// Calm offline/sync status with a Retry affordance (never red; data is always safe locally).
+    /// Optional perceived-effort reflection. No keyboard; calm, never scored or judged. Selection
+    /// shows a ✓ + Tide fill (color is never the only cue).
+    private func effortRow() -> some View {
+        let es = coordinator.language == .es
+        let labels = es ? ["Fácil", "Moderado", "Duro"] : ["Easy", "Moderate", "Hard"]
+        return VStack(spacing: AtlanSpacing.sm) {
+            Text(es ? "¿Cómo se sintió?" : "How did that feel?")
+                .font(.footnote).foregroundColor(AtlanColors.tideSoft)
+            HStack(spacing: AtlanSpacing.sm) {
+                ForEach(Array(labels.enumerated()), id: \.offset) { i, label in
+                    let selected = effort == i
+                    Button { effort = selected ? nil : i } label: {
+                        Text(selected ? "✓ \(label)" : label)
+                            .foregroundColor(selected ? AtlanColors.foam : AtlanColors.tideSoft)
+                            .padding(.horizontal, AtlanSpacing.lg)
+                            .frame(minHeight: 40)
+                            .background(selected ? AtlanColors.tide : AtlanColors.abyss)
+                            .clipShape(Capsule())
+                            .contentShape(Capsule())
+                    }
+                    .buttonStyle(AtlanPressStyle())
+                    .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+                }
+            }
+        }
+        .padding(.horizontal, AtlanSpacing.xl)
+    }
+
     private func syncBlock() -> some View {
         VStack(spacing: AtlanSpacing.sm) {
             if syncing {

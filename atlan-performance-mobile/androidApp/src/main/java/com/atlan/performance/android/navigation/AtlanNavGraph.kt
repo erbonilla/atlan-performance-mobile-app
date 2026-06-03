@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import com.atlan.performance.android.screen.HowItWorksScreen
 import com.atlan.performance.android.screen.dashboard.TodayDashboardScreen
 import com.atlan.performance.android.screen.onboarding.CalibrationScreen
 import com.atlan.performance.android.screen.onboarding.LanguageSelectionScreen
@@ -16,6 +17,7 @@ import com.atlan.performance.android.screen.session.SessionDetailScreen
 import com.atlan.performance.android.screen.session.SessionSwapperSheet
 import com.atlan.performance.android.screen.session.WetModeScreen
 import com.atlan.performance.android.screen.session.WhyModalSheet
+import com.atlan.performance.android.screen.session.WorkoutPlanListScreen
 import com.atlan.performance.android.screen.session.WorkoutPrepScreen
 import com.atlan.performance.android.screen.settings.SettingsScreen
 import com.atlan.performance.shared.AtlanShared
@@ -85,7 +87,15 @@ fun AtlanNavGraph(shared: AtlanShared) {
             onStartSession = { route = AtlanRoute.SESSION_DETAIL },
             onWhy = { key -> whyConceptKey = key },
             onOpenSwapper = { sessionId -> swapperForSessionId = sessionId },
+            onViewPlan = { route = AtlanRoute.WORKOUT_PLAN },
             onSettings = { route = AtlanRoute.SETTINGS }
+        )
+
+        AtlanRoute.WORKOUT_PLAN -> WorkoutPlanListScreen(
+            shared = shared,
+            language = language,
+            onBack = { route = AtlanRoute.DASHBOARD },
+            onOpenToday = { route = AtlanRoute.SESSION_DETAIL }
         )
 
         AtlanRoute.SESSION_DETAIL -> SessionDetailScreen(
@@ -123,7 +133,13 @@ fun AtlanNavGraph(shared: AtlanShared) {
             keepAwake = keepAwake,
             onKeepAwakeChange = { setKeepAwake(it) },
             restSeconds = restSeconds,
-            onRestSecondsChange = { setRestSeconds(it) }
+            onRestSecondsChange = { setRestSeconds(it) },
+            onHowItWorks = { route = AtlanRoute.HOW_IT_WORKS }
+        )
+
+        AtlanRoute.HOW_IT_WORKS -> HowItWorksScreen(
+            language = language,
+            onBack = { route = AtlanRoute.SETTINGS }
         )
     }
 

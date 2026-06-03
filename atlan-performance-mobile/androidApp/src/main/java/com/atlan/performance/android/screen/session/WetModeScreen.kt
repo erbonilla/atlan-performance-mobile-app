@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -393,9 +394,12 @@ private fun TutorialRow(glyph: String, text: String) {
 @Composable
 private fun SessionSummary(t: WorkoutTimerState, language: Language, onExit: () -> Unit, modifier: Modifier = Modifier) {
     val full = t.completedCount >= t.setCount
+    val es = language == Language.ES
     val scope = rememberCoroutineScope()
     var syncState by remember { mutableStateOf(OfflineStatus.SYNC_PENDING) }
     var syncing by remember { mutableStateOf(false) }
+    // Optional post-session reflection (perceived effort). Local-only; TODO(persist) with results.
+    var effort by remember { mutableStateOf<Int?>(null) }
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -436,6 +440,16 @@ private fun SessionSummary(t: WorkoutTimerState, language: Language, onExit: () 
             }
         }
 
+        // Optional reflection — perceived effort. No keyboard; calm, never scored or judged.
+        Text(if (es) "¿Cómo se sintió?" else "How did that feel?",
+            color = AtlanPalette.TideSoft, fontSize = 13.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val labels = if (es) listOf("Fácil", "Moderado", "Duro") else listOf("Easy", "Moderate", "Hard")
+            labels.forEachIndexed { i, label ->
+                EffortChip(label = label, selected = effort == i) { effort = if (effort == i) null else i }
+            }
+        }
+
         // Offline-resilience surfacing — calm, never red; data is always safe locally.
         // TODO(sync): drive a real sync-queue drain. Offline in this build → stays safely local.
         if (syncing) {
@@ -465,4 +479,19 @@ private fun SessionSummary(t: WorkoutTimerState, language: Language, onExit: () 
         AtlanButton(text = AtlanCopy.get(LocalizedStringKey.WET_MODE_DONE, language),
             onClick = onExit, coral = true, modifier = Modifier.padding(top = 12.dp))
     }
+}
+
+/** A calm perceived-effort chip. Selection shows a ✓ + Tide fill (color is never the only cue). */
+@Composable
+private fun EffortChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    Text(
+        text = if (selected) "✓ $label" else label,
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .clickable(onClick = onClick)
+            .background(if (selected) AtlanPalette.Tide else AtlanPalette.Abyss)
+            .heightIn(min = 40.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        color = if (selected) AtlanPalette.Foam else AtlanPalette.TideSoft
+    )
 }

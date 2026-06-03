@@ -11,8 +11,10 @@ enum class AtlanRoute {
     CALIBRATION,
     TUNED_SUMMARY,
     DASHBOARD,
+    WORKOUT_PLAN,
     SESSION_DETAIL,
     WORKOUT_PREP,
     WET_MODE,
-    SETTINGS
+    SETTINGS,
+    HOW_IT_WORKS
 }

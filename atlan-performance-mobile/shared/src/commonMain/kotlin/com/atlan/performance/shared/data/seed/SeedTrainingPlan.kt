@@ -70,6 +70,36 @@ object SeedTrainingPlan {
         )
     )
 
+    /** A completed earlier-week session — a calm ✓ in the plan list, never a streak or score. */
+    val recoverySession = TrainingSession(
+        id = "session-recovery",
+        scheduledAtIso = "2026-05-25T07:00:00",
+        discipline = WorkoutDiscipline.SWIM,
+        intensity = WorkoutIntensity.RECOVERY,
+        title = "Pool · Recovery",
+        distanceLabel = "800m",
+        durationEstimateLabel = "~20 min",
+        status = SessionStatus.COMPLETED,
+        offlineAvailable = true,
+        whyConceptKey = null,
+        sets = emptyList()
+    )
+
+    /** An upcoming session — shown in the plan list as calm, not pressured. */
+    val enduranceSession = TrainingSession(
+        id = "session-endurance",
+        scheduledAtIso = "2026-05-28T07:00:00",
+        discipline = WorkoutDiscipline.SWIM,
+        intensity = WorkoutIntensity.AEROBIC,
+        title = "Pool · Endurance",
+        distanceLabel = "1,800m",
+        durationEstimateLabel = "~45 min",
+        status = SessionStatus.PLANNED,
+        offlineAvailable = false,
+        whyConceptKey = null,
+        sets = emptyList()
+    )
+
     val plan = TrainingPlan(
         id = "plan-seed",
         title = "Endurance build",
@@ -79,7 +109,8 @@ object SeedTrainingPlan {
                 totalWeeks = 24,
                 loadStatus = "On track",
                 isCurrent = true,
-                sessions = listOf(todaySession)
+                // Ordered earliest → latest: a completed session, today, then an upcoming one.
+                sessions = listOf(recoverySession, todaySession, enduranceSession)
             )
         )
     )

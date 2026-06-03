@@ -11,6 +11,7 @@ import com.atlan.performance.shared.domain.usecase.CompleteOnboardingUseCase
 import com.atlan.performance.shared.domain.usecase.CompleteWorkoutSetUseCase
 import com.atlan.performance.shared.domain.usecase.GetTodayDashboardUseCase
 import com.atlan.performance.shared.domain.usecase.GetTodaySessionUseCase
+import com.atlan.performance.shared.domain.usecase.GetTrainingPlanUseCase
 import com.atlan.performance.shared.domain.usecase.GetWhyConceptUseCase
 import com.atlan.performance.shared.domain.usecase.ProposeSessionSwapUseCase
 import com.atlan.performance.shared.domain.usecase.StartWorkoutTimerUseCase
@@ -34,6 +35,7 @@ class AtlanShared {
     val completeOnboarding = CompleteOnboardingUseCase(userProfileRepository)
     val getTodayDashboard = GetTodayDashboardUseCase(sessionRepository, trainingPlanRepository)
     val getTodaySession = GetTodaySessionUseCase(sessionRepository)
+    val getTrainingPlan = GetTrainingPlanUseCase(trainingPlanRepository)
     val getWhyConcept = GetWhyConceptUseCase(whyConceptRepository)
     val proposeSessionSwap = ProposeSessionSwapUseCase(sessionRepository, swapProposalRepository)
     val acceptSessionSwap = AcceptSessionSwapUseCase(swapProposalRepository, sessionRepository, syncQueueRepository)

@@ -14,13 +14,13 @@ no-backend scope: fakes/in-memory only, with TODO anchors for the real storage/s
 
 **Navigation model.** A brief branded launch (§14) precedes a single linear stack: `language →
 welcome → calibration → tunedSummary → dashboard`. From the dashboard, `sessionDetail → workoutPrep →
-wetMode` is the session flow, plus
-two modal sheets (Why Modal, Session Swapper) presented over any screen, the `settings` route, and a
-one-time gesture coach mark drawn as an overlay on first Wet Mode entry. The Generic Error surface is
-not a route — it is a reusable view rendered in place when a screen's load fails (currently wired to
-Session Detail). iOS uses `NavigationStack` + `.sheet`; Android uses a route `when(...)` switch +
-`ModalBottomSheet`. Routes: `AppRoute` (iOS) / `AtlanRoute` (Android), incl. `workoutPrep` /
-`WORKOUT_PREP`.
+wetMode` is the session flow; the dashboard also opens `workoutPlan` (§15, the week's sessions), and
+`settings` opens `howItWorks` (§16). Plus two modal sheets (Why Modal, Session Swapper) presented over
+any screen and a one-time gesture coach mark drawn as an overlay on first Wet Mode entry. The Generic
+Error surface is not a route — it is a reusable view rendered in place when a screen's load fails
+(currently wired to Session Detail). iOS uses `NavigationStack` + `.sheet`; Android uses a route
+`when(...)` switch + `ModalBottomSheet`. Routes: `AppRoute` (iOS) / `AtlanRoute` (Android), incl.
+`workoutPlan` / `WORKOUT_PLAN` and `howItWorks` / `HOW_IT_WORKS`.
 
 **Cross-cutting rules.** Foam/Paper light surfaces; Abyss primary; Coral rare (productive action
 only); Tide for science/selected/Why. No streaks, leaderboards, peer ranking, "missed", "behind
@@ -409,7 +409,9 @@ local-first via `CompleteWorkoutSet`.
 - **Rest** — between sets: "Set N complete", rest countdown (0:30), "Next · Set N+1 …", End | Skip Rest
   zones. Auto-starts the next set at zero.
 - **Completed session** — summary: "Workout complete" / "Session ended" (partial), "X of N sets ·
-  total elapsed", **set-by-set breakdown** (✓/○ per set), the sync-status block (below), Done.
+  total elapsed", **set-by-set breakdown** (✓/○ per set), an optional **perceived-effort reflection**
+  (Easy/Moderate/Hard tappable chips — no keyboard, color-not-alone ✓+Tide, local-only/TODO persist),
+  the sync-status block (below), Done.
 - Loading — spinner until the session resolves.
 
 **Sync-status block (in the summary).** Surfaces offline-resilience using `OfflineStatus`, calm and
@@ -765,6 +767,98 @@ Selection ✓ · no input trap ✓ · Android verified on emulator; **iOS pendin
 
 ---
 
+## 15. Workout Plan List
+
+### Purpose
+Show the current week's sessions so the plan reads as more than a single isolated timer. Completed and
+upcoming sessions are calm, equal states — never a streak, score, or "missed" row.
+
+### Entry Points
+"View this week's plan"/"Ver el plan de la semana" affordance on the dashboard (below the weekly arc).
+Routes: `AtlanRoute.WORKOUT_PLAN` / `AppRoute.workoutPlan`.
+
+### Exit Points
+Back → `dashboard`. Tapping **today's** session → `sessionDetail`. Completed/upcoming rows are
+display-only (not actionable in this milestone).
+
+### Layout
+FoamWarm scroll: back control → "Your plan"/"Tu plan" display title → week subtitle ("Week 18 of 24 ·
+On track") → a Paper row per session (title, distance · duration, optional "Offline · Ready" hint, and
+a status pill: Completed / Today / Upcoming).
+
+### Components
+`AtlanBackButton` (Android), Paper rows (inline), `AtlanPill` (status), `ProgressView` while loading.
+
+### Content / State
+`TrainingWeek` from the new `GetTrainingPlanUseCase` (`getCurrentWeek()`); today's id from
+`getTodaySession()` marks the actionable row. Seed expanded with a completed **Recovery** session and
+an upcoming **Endurance** session alongside today's Threshold session.
+
+### States
+- Loading — spinner until the week resolves.
+- Loaded — session rows; today's is tappable.
+- **Empty** — calm card ("Nothing scheduled this week" / "Nada programado esta semana", "…enjoy the
+  rest"), never alarming. This doubles as the inventory's no-content/offline-empty state.
+
+### Interactions
+Open today → Session Detail. Other rows are informational. No red, no "missed", no streak.
+
+### Accessibility
+Today's row is a ≥44/48 `Role.Button`; others are plain text. Status pills read as text. Offline hint
+is informational.
+
+### iOS Notes
+`WorkoutPlanListView` (`SharedContainer.trainingWeek()`). ### Android Notes `WorkoutPlanListScreen`
+(`shared.getTrainingPlan()`).
+
+### QA Checklist
+Completed/upcoming framed as calm equals ✓ · only today actionable ✓ · calm empty state ✓ · no
+streak/missed/red ✓ · bilingual ✓ · built green on both platforms ✓.
+
+---
+
+## 16. How It Works
+
+### Purpose
+A calm primer on set-based threshold training — education on demand, never motivational pressure. The
+inventory's separate **Pace Explanation** is folded in here as its own section.
+
+### Entry Points
+A tappable "How it works"/"Cómo funciona" row in Settings. Routes: `HOW_IT_WORKS` / `.howItWorks`.
+
+### Exit Points
+Back → `settings`.
+
+### Layout
+FoamWarm scroll: back control → display title → a stack of Paper sections (Set-based training · The
+4-set structure · **Target pace** · Rest between sets · Works offline), each an uppercase Tide label +
+body.
+
+### Components
+`AtlanBackButton` (Android), Paper section cards (inline).
+
+### Content
+Inline bilingual EN/ES (not yet keyed — flagged, consistent with other screen-local copy). Tone is
+explanatory and non-judgemental; explicitly states that going over target pace is never a failure.
+
+### States
+Static content; no async, no error path.
+
+### Interactions
+Read + scroll; back. No actions in the body.
+
+### Accessibility
+Sections wrap (`fixedSize`/no shrink); Dynamic-Type/scalable. Back is a labeled 44/48 target.
+
+### iOS Notes
+`HowItWorksView`. ### Android Notes `HowItWorksScreen`.
+
+### QA Checklist
+Sourced/explanatory, no motivation pressure ✓ · pace explained (no "test"/failure framing) ✓ ·
+bilingual ✓ · built green on both platforms ✓.
+
+---
+
 ## Coverage matrix
 
 | Screen | Loading | Empty | Error | Disabled | Success | Notes |
@@ -774,14 +868,16 @@ Selection ✓ · no input trap ✓ · Android verified on emulator; **iOS pendin
 | Welcome | — | — | — | — | nav | — |
 | Calibration | — | — | — | — | nav | selection optional |
 | Tuned Summary | — | — | — | — | nav | — |
-| Today Dashboard | ✓ | — | — | — | content | no streak fields |
+| Today Dashboard | ✓ | — | — | — | content | no streak fields; "View plan" affordance |
+| Workout Plan List (§15) | ✓ | ✓ (calm) | — | — | week sessions | only today actionable; no missed/streak |
 | Session Detail | ✓ | — | ✓ (calm, via §13) | — | content | offline pill |
 | Workout Prep | ✓ | — | — | — | content | offline-ready pill; bilingual |
 | Why Modal | ✓ | ✓ (calm) | — | — | content | crash fixed |
 | Wet Mode | ✓ | — | — | — | local write + summary + sync block | phases: active/paused/overtime/rest/complete; sync: pending/syncing/saved-locally |
 | Gesture Tutorial | — | — | — | — | one-time overlay | once per install; bilingual (both platforms) |
 | Session Swapper | ✓ | — | — | ✓ (accepting) | dismiss | crash fixed |
-| Settings | — | — | — | — | live controls + display | language/haptics/keep-awake/rest persist |
+| Settings | — | — | — | — | live controls + display | language/haptics/keep-awake/rest persist; How-It-Works entry |
+| How It Works (§16) | — | — | — | — | content | primer + pace explanation; bilingual |
 | Generic Error (§13) | — | — | ✓ (reusable) | — | retry / safe exit | wired to Session Detail; unreachable with fakes |
 
 "Error" states remain intentionally absent across onboarding/dashboard: offline-missing content is a

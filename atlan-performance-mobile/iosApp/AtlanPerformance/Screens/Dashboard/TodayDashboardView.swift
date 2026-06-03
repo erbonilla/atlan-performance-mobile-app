@@ -15,6 +15,13 @@ struct TodayDashboardView: View {
                 if let s = state {
                     if let session = s.todaySession { todayCard(s, session) }
                     weeklyArcCard(s.weeklyArc)
+                    Button { coordinator.go(.workoutPlan) } label: {
+                        Text(coordinator.language == .es ? "Ver el plan de la semana" : "View this week's plan")
+                            .foregroundColor(AtlanColors.tideDeep)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(AtlanPressStyle())
                     ForEach(s.metricChips, id: \.key) { chip in
                         AtlanMetricChip(chip: chip) { coordinator.presentWhy($0) }
                     }

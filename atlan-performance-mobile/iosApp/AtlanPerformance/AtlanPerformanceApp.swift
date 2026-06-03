@@ -67,10 +67,12 @@ struct AtlanPerformanceApp: App {
         case .calibration: CalibrationView()
         case .tunedSummary: TunedSummaryView()
         case .dashboard: TodayDashboardView()
+        case .workoutPlan: WorkoutPlanListView()
         case .sessionDetail: SessionDetailView()
         case .workoutPrep: WorkoutPrepView()
         case .wetMode: WetModeView()
         case .settings: SettingsView()
+        case .howItWorks: HowItWorksView()
         }
     }
 }

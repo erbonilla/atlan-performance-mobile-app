@@ -7,8 +7,10 @@ enum AppRoute: Hashable {
     case calibration
     case tunedSummary
     case dashboard
+    case workoutPlan
     case sessionDetail
     case workoutPrep
     case wetMode
     case settings
+    case howItWorks
 }

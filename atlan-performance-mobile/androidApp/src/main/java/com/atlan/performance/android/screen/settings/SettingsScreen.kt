@@ -44,7 +44,8 @@ fun SettingsScreen(
     keepAwake: Boolean,
     onKeepAwakeChange: (Boolean) -> Unit,
     restSeconds: Int,
-    onRestSecondsChange: (Int) -> Unit
+    onRestSecondsChange: (Int) -> Unit,
+    onHowItWorks: () -> Unit
 ) {
     val es = language == Language.ES
     val displayRows = if (es) listOf(
@@ -92,16 +93,31 @@ fun SettingsScreen(
                 Text(value, color = AtlanPalette.TideDeep)
             }
         }
+
+        // Education — opens the How It Works primer.
+        PaperRow(
+            modifier = Modifier
+                .clickable(onClick = onHowItWorks)
+                .semantics { role = Role.Button }
+        ) {
+            Text(if (es) "Cómo funciona" else "How it works",
+                color = AtlanPalette.Abyss, modifier = Modifier.weight(1f))
+            Text("›", color = AtlanPalette.TideDeep)
+        }
     }
 }
 
 @Composable
-private fun PaperRow(content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
+private fun PaperRow(
+    modifier: Modifier = Modifier,
+    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .clip(RoundedCornerShape(16.dp))
+            .then(modifier)
             .background(AtlanPalette.Paper)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,

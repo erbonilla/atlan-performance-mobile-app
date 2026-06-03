@@ -50,6 +50,7 @@ fun TodayDashboardScreen(
     onStartSession: () -> Unit,
     onWhy: (String) -> Unit,
     onOpenSwapper: (String) -> Unit,
+    onViewPlan: () -> Unit,
     onSettings: () -> Unit
 ) {
     val state: DashboardState? by produceState<DashboardState?>(initialValue = null) {
@@ -126,6 +127,18 @@ fun TodayDashboardScreen(
 
         // Weekly arc card.
         WeeklyArcCard(s.weeklyArc)
+
+        // Quiet entry to the full week's plan.
+        Text(
+            if (language == Language.ES) "Ver el plan de la semana" else "View this week's plan",
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .clickable(onClick = onViewPlan)
+                .wrapContentSize(Alignment.CenterStart)
+                .semantics { role = Role.Button },
+            color = AtlanPalette.TideDeep
+        )
 
         // Metric chips.
         s.metricChips.forEach { chip ->

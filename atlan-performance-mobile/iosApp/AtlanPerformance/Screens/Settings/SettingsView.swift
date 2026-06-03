@@ -57,6 +57,16 @@ struct SettingsView: View {
                             .multilineTextAlignment(.trailing)
                     }
                 }
+
+                // Education — opens the How It Works primer.
+                Button { coordinator.go(.howItWorks) } label: {
+                    paperRow {
+                        Text(isES ? "Cómo funciona" : "How it works").foregroundColor(AtlanColors.abyss)
+                        Spacer()
+                        Text("›").foregroundColor(AtlanColors.tideDeep)
+                    }
+                }
+                .buttonStyle(AtlanPressStyle())
             }
             .padding(AtlanSpacing.xl)
         }
