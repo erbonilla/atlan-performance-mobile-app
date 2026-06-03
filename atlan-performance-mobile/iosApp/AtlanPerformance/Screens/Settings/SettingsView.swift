@@ -58,6 +58,16 @@ struct SettingsView: View {
                     }
                 }
 
+                // Workout history — opens the local list of finished sessions.
+                Button { coordinator.go(.history) } label: {
+                    paperRow {
+                        Text(isES ? "Historial de entrenos" : "Workout history").foregroundColor(AtlanColors.abyss)
+                        Spacer()
+                        Text("›").foregroundColor(AtlanColors.tideDeep)
+                    }
+                }
+                .buttonStyle(AtlanPressStyle())
+
                 // Education — opens the How It Works primer.
                 Button { coordinator.go(.howItWorks) } label: {
                     paperRow {

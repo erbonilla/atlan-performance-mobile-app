@@ -27,8 +27,9 @@ struct WetModeView: View {
     // Offline-resilience surfacing on the summary. Stub until a real sync queue exists.
     @State private var syncState: OfflineStatus = .syncPending
     @State private var syncing = false
-    // Optional post-session reflection (perceived effort). Local-only; TODO(persist) with results.
+    // Optional post-session reflection (perceived effort), recorded into history on Done.
     @State private var effort: Int? = nil
+    @State private var sessionTitle = ""
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let swipeThreshold: CGFloat = 120
@@ -91,6 +92,7 @@ struct WetModeView: View {
         .task {
             if timer == nil, let session = await container.todaySession()?.session {
                 nowMs = monoNow()
+                sessionTitle = session.title
                 // Resume from a saved snapshot (recovery) or start fresh.
                 let progress = coordinator.wetResume ? await container.loadSessionProgress() : nil
                 if let p = progress, p.sessionId == session.id {
@@ -108,6 +110,16 @@ struct WetModeView: View {
             if t.isComplete { await container.clearSessionProgress(t.sessionId) }
             else { await container.saveSessionProgress(t, restSeconds: coordinator.restSeconds) }
         }
+    }
+
+    /// Records the finished session into Workout History (local-first), then leaves.
+    private func finishAndRecord(_ t: WorkoutTimerState) {
+        let effortKeys = ["easy", "moderate", "hard"]
+        let effortKey = effort.map { effortKeys[$0] }
+        let iso = ISO8601DateFormatter().string(from: Date())
+        let title = sessionTitle.isEmpty ? "Pool · Threshold" : sessionTitle
+        Task { await container.recordCompletedSession(t, title: title, perceivedEffort: effortKey, finishedAtIso: iso) }
+        coordinator.pop()
     }
 
     // MARK: Active set
@@ -207,7 +219,7 @@ struct WetModeView: View {
             effortRow()
             syncBlock()
             Spacer()
-            AtlanButton(title: localized(.wetModeDone, lang), coral: true) { coordinator.pop() }
+            AtlanButton(title: localized(.wetModeDone, lang), coral: true) { finishAndRecord(t) }
                 .padding(.horizontal, AtlanSpacing.xl)
                 .padding(.bottom, AtlanSpacing.xxl)
         }

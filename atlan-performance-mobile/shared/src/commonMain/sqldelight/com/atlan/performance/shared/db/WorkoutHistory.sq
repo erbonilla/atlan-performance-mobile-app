@@ -1,0 +1,22 @@
+-- Completed (or ended-early) sessions, persisted locally so Workout History survives relaunch.
+-- Calm record only: counts + elapsed + optional perceived effort. No streaks, scores, or "missed".
+CREATE TABLE completedSession (
+    id                TEXT NOT NULL PRIMARY KEY,
+    title             TEXT NOT NULL,
+    completedSetCount INTEGER NOT NULL,
+    totalSetCount     INTEGER NOT NULL,
+    totalElapsedLabel TEXT NOT NULL,
+    perceivedEffort   TEXT,                 -- nullable: reflection is optional
+    finishedAtIso     TEXT NOT NULL,
+    fullyCompleted    INTEGER NOT NULL      -- 0/1
+);
+
+record:
+INSERT OR REPLACE INTO completedSession(id, title, completedSetCount, totalSetCount, totalElapsedLabel, perceivedEffort, finishedAtIso, fullyCompleted)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+selectRecent:
+SELECT * FROM completedSession ORDER BY finishedAtIso DESC LIMIT 50;
+
+deleteAll:
+DELETE FROM completedSession;

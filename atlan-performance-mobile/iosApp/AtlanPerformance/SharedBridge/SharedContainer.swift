@@ -80,4 +80,16 @@ final class SharedContainer: ObservableObject {
     func resumeTimer(for session: TrainingSession, progress: SessionProgress) -> WorkoutTimerState {
         shared.resumeWorkoutTimer.invoke(session: session, progress: progress, setDurationMs: 105_000)
     }
+
+    // MARK: Workout history
+
+    func recordCompletedSession(_ timer: WorkoutTimerState, title: String, perceivedEffort: String?, finishedAtIso: String) async {
+        try? await shared.recordCompletedSession.invoke(
+            timer: timer, title: title, perceivedEffort: perceivedEffort, finishedAtIso: finishedAtIso
+        )
+    }
+
+    func workoutHistory() async -> [CompletedSession] {
+        (try? await shared.getWorkoutHistory.invoke()) ?? []
+    }
 }

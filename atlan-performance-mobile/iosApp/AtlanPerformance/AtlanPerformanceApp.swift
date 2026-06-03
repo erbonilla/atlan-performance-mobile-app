@@ -73,6 +73,7 @@ struct AtlanPerformanceApp: App {
         case .wetMode: WetModeView()
         case .settings: SettingsView()
         case .howItWorks: HowItWorksView()
+        case .history: HistoryView()
         }
     }
 }

@@ -98,11 +98,13 @@ fun WetModeScreen(
     var showEarlyConfirm by remember { mutableStateOf(false) }
     var showExitConfirm by remember { mutableStateOf(false) }
     var showTutorial by remember { mutableStateOf(!tutorialSeen) }
+    var sessionTitle by remember { mutableStateOf("") }
 
     fun monoNow() = SystemClock.elapsedRealtime()
 
     LaunchedEffect(Unit) {
         val session = shared.getTodaySession()?.session ?: return@LaunchedEffect
+        sessionTitle = session.title
         now = monoNow()
         // Resume from a saved snapshot (after relaunch/recovery) or start fresh.
         val progress = if (resume) shared.loadSessionProgress() else null
@@ -210,7 +212,7 @@ fun WetModeScreen(
         val t = timer
         when {
             t == null -> Text("…", color = AtlanPalette.TideSoft, modifier = Modifier.align(Alignment.Center))
-            t.isComplete -> SessionSummary(t, language, onExit, Modifier.align(Alignment.Center))
+            t.isComplete -> SessionSummary(t, language, shared, sessionTitle, onExit, Modifier.align(Alignment.Center))
             t.isResting -> RestPhase(t, now, language, Modifier.align(Alignment.TopCenter))
             else -> ActiveTimer(t, now, language, Modifier.align(Alignment.TopCenter))
         }
@@ -406,14 +408,22 @@ private fun TutorialRow(glyph: String, text: String) {
 }
 
 @Composable
-private fun SessionSummary(t: WorkoutTimerState, language: Language, onExit: () -> Unit, modifier: Modifier = Modifier) {
+private fun SessionSummary(
+    t: WorkoutTimerState,
+    language: Language,
+    shared: AtlanShared,
+    sessionTitle: String,
+    onExit: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val full = t.completedCount >= t.setCount
     val es = language == Language.ES
     val scope = rememberCoroutineScope()
     var syncState by remember { mutableStateOf(OfflineStatus.SYNC_PENDING) }
     var syncing by remember { mutableStateOf(false) }
-    // Optional post-session reflection (perceived effort). Local-only; TODO(persist) with results.
+    // Optional post-session reflection (perceived effort), recorded into Workout History on Done.
     var effort by remember { mutableStateOf<Int?>(null) }
+    val effortKeys = listOf("easy", "moderate", "hard")
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -491,7 +501,19 @@ private fun SessionSummary(t: WorkoutTimerState, language: Language, onExit: () 
             }) { Text(AtlanCopy.get(LocalizedStringKey.WET_MODE_RETRY_SYNC, language), color = AtlanPalette.TideSoft) }
         }
         AtlanButton(text = AtlanCopy.get(LocalizedStringKey.WET_MODE_DONE, language),
-            onClick = onExit, coral = true, modifier = Modifier.padding(top = 12.dp))
+            onClick = {
+                // Record into Workout History (local-first), then leave.
+                scope.launch {
+                    shared.recordCompletedSession(
+                        t,
+                        sessionTitle.ifEmpty { "Pool · Threshold" },
+                        effort?.let { effortKeys[it] },
+                        java.time.LocalDateTime.now().toString()
+                    )
+                }
+                onExit()
+            },
+            coral = true, modifier = Modifier.padding(top = 12.dp))
     }
 }
 

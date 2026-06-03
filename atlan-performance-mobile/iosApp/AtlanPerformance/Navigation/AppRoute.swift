@@ -13,4 +13,5 @@ enum AppRoute: Hashable {
     case wetMode
     case settings
     case howItWorks
+    case history
 }

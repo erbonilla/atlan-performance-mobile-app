@@ -7,6 +7,7 @@ import com.atlan.performance.shared.data.fake.FakeUserProfileRepository
 import com.atlan.performance.shared.data.fake.FakeWhyConceptRepository
 import com.atlan.performance.shared.data.local.SqlDelightSessionProgressRepository
 import com.atlan.performance.shared.data.local.SqlDelightSyncQueueRepository
+import com.atlan.performance.shared.data.local.SqlDelightWorkoutHistoryRepository
 import com.atlan.performance.shared.db.DatabaseDriverFactory
 import com.atlan.performance.shared.db.createAtlanDatabase
 import com.atlan.performance.shared.domain.usecase.AcceptSessionSwapUseCase
@@ -17,8 +18,10 @@ import com.atlan.performance.shared.domain.usecase.GetTodayDashboardUseCase
 import com.atlan.performance.shared.domain.usecase.GetTodaySessionUseCase
 import com.atlan.performance.shared.domain.usecase.GetTrainingPlanUseCase
 import com.atlan.performance.shared.domain.usecase.GetWhyConceptUseCase
+import com.atlan.performance.shared.domain.usecase.GetWorkoutHistoryUseCase
 import com.atlan.performance.shared.domain.usecase.LoadSessionProgressUseCase
 import com.atlan.performance.shared.domain.usecase.ProposeSessionSwapUseCase
+import com.atlan.performance.shared.domain.usecase.RecordCompletedSessionUseCase
 import com.atlan.performance.shared.domain.usecase.ResumeWorkoutTimerUseCase
 import com.atlan.performance.shared.domain.usecase.SaveSessionProgressUseCase
 import com.atlan.performance.shared.domain.usecase.StartWorkoutTimerUseCase
@@ -42,6 +45,7 @@ class AtlanShared(databaseDriverFactory: DatabaseDriverFactory) {
     private val swapProposalRepository = FakeSwapProposalRepository()
     private val syncQueueRepository = SqlDelightSyncQueueRepository(database)
     private val sessionProgressRepository = SqlDelightSessionProgressRepository(database)
+    private val workoutHistoryRepository = SqlDelightWorkoutHistoryRepository(database)
 
     val completeOnboarding = CompleteOnboardingUseCase(userProfileRepository)
     val getTodayDashboard = GetTodayDashboardUseCase(sessionRepository, trainingPlanRepository)
@@ -56,4 +60,6 @@ class AtlanShared(databaseDriverFactory: DatabaseDriverFactory) {
     val saveSessionProgress = SaveSessionProgressUseCase(sessionProgressRepository)
     val loadSessionProgress = LoadSessionProgressUseCase(sessionProgressRepository)
     val clearSessionProgress = ClearSessionProgressUseCase(sessionProgressRepository)
+    val recordCompletedSession = RecordCompletedSessionUseCase(workoutHistoryRepository)
+    val getWorkoutHistory = GetWorkoutHistoryUseCase(workoutHistoryRepository)
 }

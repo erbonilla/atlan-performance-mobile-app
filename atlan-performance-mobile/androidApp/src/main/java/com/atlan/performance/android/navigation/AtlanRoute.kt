@@ -16,5 +16,6 @@ enum class AtlanRoute {
     WORKOUT_PREP,
     WET_MODE,
     SETTINGS,
-    HOW_IT_WORKS
+    HOW_IT_WORKS,
+    HISTORY
 }

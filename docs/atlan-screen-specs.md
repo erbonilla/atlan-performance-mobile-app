@@ -912,6 +912,55 @@ counted ✓ · discard clears ✓ · finishing a session clears ✓ · calm, no 
 
 ---
 
+## 18. Workout History
+
+### Purpose
+A calm, durable record of finished sessions — set counts, elapsed, optional perceived effort. Builds
+trust and lets the user look back. No streaks, no totals-as-pressure; partial (ended-early) sessions
+are valid records, not failures.
+
+### Entry Points
+"Workout history" / "Historial de entrenos" row in Settings. Routes: `HISTORY` / `.history`.
+
+### Exit Points
+Back → `settings`.
+
+### Layout
+FoamWarm scroll: back → "History"/"Historial" → a Paper row per session (title + date, "X of N sets ·
+elapsed", and pills: "Partial" when ended early, an effort tag when present). Empty → calm
+"No sessions yet" card.
+
+### Content / State
+`List<CompletedSession>` from `GetWorkoutHistoryUseCase` (newest first, top 50) over the SQLDelight
+`completedSession` table. Records are written by `RecordCompletedSessionUseCase` when the user taps
+**Done** on the Wet Mode summary — capturing title, completed/total sets, total elapsed, the optional
+effort reflection, finished-at timestamp, and a full/partial flag. The platform supplies the timestamp
+(ISO-8601; the row shows its date prefix).
+
+### States
+- Loading — spinner until the query resolves.
+- Loaded — rows, newest first.
+- **Empty** — reassuring "No sessions yet" card (first run, or after clearing).
+- No error path (local DB).
+
+### Behaviour notes
+- Recording happens on **Done**, so a session killed *on the summary* before Done isn't recorded
+  (an accepted edge; mid-session recovery is handled separately by §17).
+- Effort is stored as a canonical key (`easy`/`moderate`/`hard`) and localised at display.
+
+### Accessibility
+Rows read top-to-bottom; pills are text. Back is a labeled 44/48 target.
+
+### iOS Notes
+`HistoryView` (`container.workoutHistory()`). ### Android Notes `HistoryScreen` (`shared.getWorkoutHistory()`).
+
+### QA Checklist
+Persists across relaunch (SQLite) ✓ · newest-first ✓ · partials recorded + flagged calmly ✓ · effort
+round-trips ✓ · empty state reassuring ✓ · proven by `WorkoutHistoryPersistenceTest` + built green on
+both platforms ✓.
+
+---
+
 ## Coverage matrix
 
 | Screen | Loading | Empty | Error | Disabled | Success | Notes |
@@ -932,6 +981,7 @@ counted ✓ · discard clears ✓ · finishing a session clears ✓ · calm, no 
 | Settings | — | — | — | — | live controls + display | language/haptics/keep-awake/rest persist; How-It-Works entry |
 | How It Works (§16) | — | — | — | — | content | primer + pace explanation; bilingual |
 | Resume / Recovery (§17) | — | (no banner) | — | — | resume / discard | dashboard banner; SQLite-backed, survives process death |
+| Workout History (§18) | ✓ | ✓ (calm) | — | — | list | SQLite-backed; newest-first; partials flagged, not failed |
 | Generic Error (§13) | — | — | ✓ (reusable) | — | retry / safe exit | wired to Session Detail; unreachable with fakes |
 
 "Error" states remain intentionally absent across onboarding/dashboard: offline-missing content is a

@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import com.atlan.performance.android.screen.HistoryScreen
 import com.atlan.performance.android.screen.HowItWorksScreen
 import com.atlan.performance.android.screen.dashboard.TodayDashboardScreen
 import com.atlan.performance.android.screen.onboarding.CalibrationScreen
@@ -138,10 +139,17 @@ fun AtlanNavGraph(shared: AtlanShared) {
             onKeepAwakeChange = { setKeepAwake(it) },
             restSeconds = restSeconds,
             onRestSecondsChange = { setRestSeconds(it) },
-            onHowItWorks = { route = AtlanRoute.HOW_IT_WORKS }
+            onHowItWorks = { route = AtlanRoute.HOW_IT_WORKS },
+            onHistory = { route = AtlanRoute.HISTORY }
         )
 
         AtlanRoute.HOW_IT_WORKS -> HowItWorksScreen(
+            language = language,
+            onBack = { route = AtlanRoute.SETTINGS }
+        )
+
+        AtlanRoute.HISTORY -> HistoryScreen(
+            shared = shared,
             language = language,
             onBack = { route = AtlanRoute.SETTINGS }
         )

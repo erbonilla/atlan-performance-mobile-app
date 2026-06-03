@@ -45,7 +45,8 @@ fun SettingsScreen(
     onKeepAwakeChange: (Boolean) -> Unit,
     restSeconds: Int,
     onRestSecondsChange: (Int) -> Unit,
-    onHowItWorks: () -> Unit
+    onHowItWorks: () -> Unit,
+    onHistory: () -> Unit
 ) {
     val es = language == Language.ES
     val displayRows = if (es) listOf(
@@ -92,6 +93,17 @@ fun SettingsScreen(
                 Text(title, color = AtlanPalette.Abyss, modifier = Modifier.weight(1f))
                 Text(value, color = AtlanPalette.TideDeep)
             }
+        }
+
+        // Workout history — opens the local list of finished sessions.
+        PaperRow(
+            modifier = Modifier
+                .clickable(onClick = onHistory)
+                .semantics { role = Role.Button }
+        ) {
+            Text(if (es) "Historial de entrenos" else "Workout history",
+                color = AtlanPalette.Abyss, modifier = Modifier.weight(1f))
+            Text("›", color = AtlanPalette.TideDeep)
         }
 
         // Education — opens the How It Works primer.
