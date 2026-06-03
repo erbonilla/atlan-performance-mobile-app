@@ -78,6 +78,24 @@ struct SettingsView: View {
                 }
                 .buttonStyle(AtlanPressStyle())
 
+                // Optional capabilities — rationale before any system prompt.
+                Button { coordinator.go(.permissionRationale(.notifications)) } label: {
+                    paperRow {
+                        Text(isES ? "Recordatorios" : "Reminders").foregroundColor(AtlanColors.abyss)
+                        Spacer()
+                        Text("›").foregroundColor(AtlanColors.tideDeep)
+                    }
+                }
+                .buttonStyle(AtlanPressStyle())
+                Button { coordinator.go(.permissionRationale(.health)) } label: {
+                    paperRow {
+                        Text(isES ? "Salud" : "Health").foregroundColor(AtlanColors.abyss)
+                        Spacer()
+                        Text("›").foregroundColor(AtlanColors.tideDeep)
+                    }
+                }
+                .buttonStyle(AtlanPressStyle())
+
                 // Education — opens the How It Works primer.
                 Button { coordinator.go(.howItWorks) } label: {
                     paperRow {

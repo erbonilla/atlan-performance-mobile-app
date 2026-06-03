@@ -9,6 +9,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.atlan.performance.android.screen.HistoryScreen
 import com.atlan.performance.android.screen.HowItWorksScreen
+import com.atlan.performance.android.screen.PermissionKind
+import com.atlan.performance.android.screen.PermissionRationaleScreen
 import com.atlan.performance.android.screen.ProgressScreen
 import com.atlan.performance.android.screen.dashboard.TodayDashboardScreen
 import com.atlan.performance.android.screen.onboarding.CalibrationScreen
@@ -168,7 +170,9 @@ fun AtlanNavGraph(shared: AtlanShared) {
             onRestSecondsChange = { setRestSeconds(it) },
             onHowItWorks = { route = AtlanRoute.HOW_IT_WORKS },
             onHistory = { route = AtlanRoute.HISTORY },
-            onProgress = { route = AtlanRoute.PROGRESS }
+            onProgress = { route = AtlanRoute.PROGRESS },
+            onNotifications = { route = AtlanRoute.NOTIFICATIONS_RATIONALE },
+            onHealth = { route = AtlanRoute.HEALTH_RATIONALE }
         )
 
         AtlanRoute.HOW_IT_WORKS -> HowItWorksScreen(
@@ -184,6 +188,18 @@ fun AtlanNavGraph(shared: AtlanShared) {
 
         AtlanRoute.PROGRESS -> ProgressScreen(
             shared = shared,
+            language = language,
+            onBack = { route = AtlanRoute.SETTINGS }
+        )
+
+        AtlanRoute.NOTIFICATIONS_RATIONALE -> PermissionRationaleScreen(
+            kind = PermissionKind.NOTIFICATIONS,
+            language = language,
+            onBack = { route = AtlanRoute.SETTINGS }
+        )
+
+        AtlanRoute.HEALTH_RATIONALE -> PermissionRationaleScreen(
+            kind = PermissionKind.HEALTH,
             language = language,
             onBack = { route = AtlanRoute.SETTINGS }
         )

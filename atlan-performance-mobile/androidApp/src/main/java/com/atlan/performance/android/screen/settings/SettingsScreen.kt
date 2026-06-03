@@ -47,7 +47,9 @@ fun SettingsScreen(
     onRestSecondsChange: (Int) -> Unit,
     onHowItWorks: () -> Unit,
     onHistory: () -> Unit,
-    onProgress: () -> Unit
+    onProgress: () -> Unit,
+    onNotifications: () -> Unit,
+    onHealth: () -> Unit
 ) {
     val es = language == Language.ES
     val displayRows = if (es) listOf(
@@ -114,6 +116,22 @@ fun SettingsScreen(
                 .semantics { role = Role.Button }
         ) {
             Text(if (es) "Progreso" else "Progress",
+                color = AtlanPalette.Abyss, modifier = Modifier.weight(1f))
+            Text("›", color = AtlanPalette.TideDeep)
+        }
+
+        // Optional capabilities — rationale before any system prompt.
+        PaperRow(
+            modifier = Modifier.clickable(onClick = onNotifications).semantics { role = Role.Button }
+        ) {
+            Text(if (es) "Recordatorios" else "Reminders",
+                color = AtlanPalette.Abyss, modifier = Modifier.weight(1f))
+            Text("›", color = AtlanPalette.TideDeep)
+        }
+        PaperRow(
+            modifier = Modifier.clickable(onClick = onHealth).semantics { role = Role.Button }
+        ) {
+            Text(if (es) "Salud" else "Health",
                 color = AtlanPalette.Abyss, modifier = Modifier.weight(1f))
             Text("›", color = AtlanPalette.TideDeep)
         }

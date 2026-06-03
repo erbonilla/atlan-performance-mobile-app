@@ -1064,6 +1064,63 @@ platforms ✓.
 
 ---
 
+## 21. Permission Rationale (Notifications / Health)
+
+### Purpose
+Explain the **value** of an optional capability *before* any system permission prompt — and never
+fire one cold. Two variants (Reminders, Health) from one reusable screen.
+
+### Entry Points
+"Reminders" / "Salud" rows in Settings. Routes: `NOTIFICATIONS_RATIONALE` / `HEALTH_RATIONALE`
+(Android) and `.permissionRationale(.notifications | .health)` (iOS, associated value).
+
+### Exit Points
+Primary CTA ("Turn on reminders" / "Connect") records intent and shows a calm acknowledgement; "Done"
+or "Not now" → back to Settings.
+
+### Layout
+FoamWarm: "Optional" eyebrow → title → body → a Paper card of calm value bullets → CTA + "Not now".
+
+### Behaviour (no backend / no infra)
+**Honest by design:** this milestone has no notification/Health wiring, so the CTA does **not** trigger
+an OS prompt. It flips to a calm acknowledgement — "We'll ask you to confirm the permission when it's
+available." TODO: the real prompt + wiring (UserNotifications + WorkManager reminders; HealthKit /
+Health Connect sync). Always skippable; never triggered cold (per the inventory's explicit rule).
+
+### Content
+Inline bilingual EN/ES. Calm, non-pressuring — reminders are "gentle, never nagging"; Health is
+"optional, you stay in control, disconnect anytime."
+
+### States
+Rationale (default) → acknowledged (after CTA). No async; no error path.
+
+### Accessibility
+CTA + "Not now"/"Done" are ≥44/48 targets; bullets read in order.
+
+### iOS Notes
+`PermissionRationaleView(kind:)`; `PermissionKind` enum drives content.
+### Android Notes
+`PermissionRationaleScreen(kind)`; `PermissionKind` enum.
+
+### QA Checklist
+Explains value before any prompt ✓ · never fires a system prompt cold ✓ · calm, optional, skippable ✓
+· bilingual ✓ · both variants from one screen ✓ · built green on both platforms ✓.
+
+---
+
+## Brand assets (logo)
+
+The Atlan logo (`assets/atlan_logo_bk.svg`, rendered to a 1024 PNG) is wired as:
+- **App icon** — iOS `Assets.xcassets/AppIcon` (single 1024; `actool` derives the sizes); Android
+  launcher via `android:icon`/`roundIcon` → `@drawable/atlan_logo`.
+- **In-app brand** — the **Branded Launch** (§14) and **Language Selection** (§1) now show the logo
+  badge in place of the earlier text wordmark, on both platforms (`Image("AtlanLogo")` / `painterResource`).
+
+(TODO: flatten the iOS app icon to an opaque AbyssDeep square for App Store submission — the current
+art has transparent corners, which the system masks but the store prefers opaque.)
+
+---
+
 ## Coverage matrix
 
 | Screen | Loading | Empty | Error | Disabled | Success | Notes |
@@ -1087,6 +1144,7 @@ platforms ✓.
 | Workout History (§18) | ✓ | ✓ (calm) | — | — | list | SQLite-backed; newest-first; partials flagged, not failed |
 | Progress Overview (§19) | ✓ | ✓ (calm) | — | — | summary | calm tallies from history; no streak/deficit/red |
 | Profile Setup (§20) | — | — | — | — | nav | optional name+level; persisted; bootstrap skips onboarding |
+| Permission Rationale (§21) | — | — | — | — | rationale + ack | Notifications/Health; never prompts cold; UI-only |
 | Generic Error (§13) | — | — | ✓ (reusable) | — | retry / safe exit | wired to Session Detail; unreachable with fakes |
 
 "Error" states remain intentionally absent across onboarding/dashboard: offline-missing content is a

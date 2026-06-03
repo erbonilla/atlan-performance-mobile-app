@@ -19,5 +19,7 @@ enum class AtlanRoute {
     SETTINGS,
     HOW_IT_WORKS,
     HISTORY,
-    PROGRESS
+    PROGRESS,
+    NOTIFICATIONS_RATIONALE,
+    HEALTH_RATIONALE
 }

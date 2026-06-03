@@ -1,24 +1,24 @@
 package com.atlan.performance.android.screen.onboarding
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.atlan.performance.android.R
 import com.atlan.performance.android.design.AtlanButton
 import com.atlan.performance.android.design.AtlanPalette
 import com.atlan.performance.shared.design.AtlanSpacing
@@ -40,14 +40,10 @@ fun LanguageSelectionScreen(onSelect: (Language) -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(AtlanSpacing.xl.dp)
         ) {
-            Text("atlan", fontSize = 40.sp, fontWeight = FontWeight.SemiBold, color = AtlanPalette.Abyss)
-            Box(
-                Modifier
-                    .padding(top = AtlanSpacing.xs.dp)
-                    .width(48.dp)
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(AtlanPalette.Coral)
+            Image(
+                painter = painterResource(R.drawable.atlan_logo),
+                contentDescription = "Atlan Performance",
+                modifier = Modifier.size(112.dp)
             )
 
             // Co-equal bilingual heading — equal size/weight so neither reads as secondary (§4.1).

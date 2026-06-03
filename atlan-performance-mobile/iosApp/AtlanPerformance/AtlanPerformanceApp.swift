@@ -82,6 +82,7 @@ struct AtlanPerformanceApp: App {
         case .howItWorks: HowItWorksView()
         case .history: HistoryView()
         case .progress: ProgressView_Atlan()
+        case .permissionRationale(let kind): PermissionRationaleView(kind: kind)
         }
     }
 }
@@ -100,15 +101,11 @@ struct AtlanSplashView: View {
     var body: some View {
         ZStack {
             AtlanColors.foamWarm.ignoresSafeArea()
-            VStack(spacing: AtlanSpacing.xs) {
-                Text("atlan")
-                    .font(.system(size: 44, weight: .semibold))
-                    .foregroundColor(AtlanColors.abyss)
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(AtlanColors.coral)
-                    .frame(width: 52, height: 3)
-            }
-            .opacity(shown ? 1 : 0)
+            Image("AtlanLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 148, height: 148)
+                .opacity(shown ? 1 : 0)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Atlan Performance")

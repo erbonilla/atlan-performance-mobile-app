@@ -16,4 +16,11 @@ enum AppRoute: Hashable {
     case howItWorks
     case history
     case progress
+    case permissionRationale(PermissionKind)
+}
+
+/// Which optional capability a rationale screen explains.
+enum PermissionKind: Hashable {
+    case notifications
+    case health
 }

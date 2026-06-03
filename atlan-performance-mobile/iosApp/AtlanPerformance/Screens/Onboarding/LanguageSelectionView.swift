@@ -10,10 +10,11 @@ struct LanguageSelectionView: View {
         ZStack {
             AtlanColors.foamWarm.ignoresSafeArea()
             VStack(spacing: AtlanSpacing.lg) {
-                VStack(spacing: AtlanSpacing.xs) {
-                    Text("atlan").font(.system(size: 40, weight: .semibold)).foregroundColor(AtlanColors.abyss)
-                    Rectangle().fill(AtlanColors.coral).frame(width: 48, height: 3).clipShape(Capsule())
-                }
+                Image("AtlanLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 112, height: 112)
+                    .accessibilityLabel("Atlan Performance")
 
                 // Co-equal bilingual heading — neither language is gated behind the other (§4.1).
                 VStack(spacing: AtlanSpacing.xs) {
