@@ -1,8 +1,10 @@
 package com.atlan.performance.shared.data.local
 
 import com.atlan.performance.shared.db.AtlanDatabase
+import com.atlan.performance.shared.db.ioDispatcher
 import com.atlan.performance.shared.domain.model.CompletedSession
 import com.atlan.performance.shared.domain.repository.WorkoutHistoryRepository
+import kotlinx.coroutines.withContext
 
 /**
  * SQLDelight-backed Workout History — finished sessions persist across relaunch. INTEGER columns map
@@ -14,7 +16,7 @@ class SqlDelightWorkoutHistoryRepository(database: AtlanDatabase) : WorkoutHisto
 
     private val queries = database.workoutHistoryQueries
 
-    override suspend fun record(session: CompletedSession) {
+    override suspend fun record(session: CompletedSession) = withContext(ioDispatcher) {
         queries.record(
             id = session.id,
             title = session.title,
@@ -27,8 +29,9 @@ class SqlDelightWorkoutHistoryRepository(database: AtlanDatabase) : WorkoutHisto
         )
     }
 
-    override suspend fun recent(): List<CompletedSession> =
+    override suspend fun recent(): List<CompletedSession> = withContext(ioDispatcher) {
         queries.selectRecent(::mapRow).executeAsList()
+    }
 
     private fun mapRow(
         id: String,

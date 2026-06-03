@@ -944,8 +944,9 @@ effort reflection, finished-at timestamp, and a full/partial flag. The platform 
 - No error path (local DB).
 
 ### Behaviour notes
-- Recording happens on **Done**, so a session killed *on the summary* before Done isn't recorded
-  (an accepted edge; mid-session recovery is handled separately by §17).
+- Recording happens **on completion** (when the session reaches `COMPLETED_SESSION`), so a session
+  killed *on the summary* before Done is still logged. Tapping **Done** with a perceived-effort chip
+  selected **upserts** the same record (same id via a stable completion timestamp) to attach the effort.
 - Effort is stored as a canonical key (`easy`/`moderate`/`hard`) and localised at display.
 
 ### Accessibility

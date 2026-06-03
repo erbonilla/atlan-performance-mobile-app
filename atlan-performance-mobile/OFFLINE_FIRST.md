@@ -55,10 +55,14 @@ Network must never block Wet Mode. Workout completion writes locally first.
   registered (needs an Info.plist identifier — see its TODO). The Wet Mode summary's Retry also runs
   the real engine in the foreground.
 
+## Threading
+DB calls run off the UI thread: each SQLDelight repository wraps its queries in
+`withContext(ioDispatcher)`, where `ioDispatcher` is an `expect/actual` value — `Dispatchers.IO` on
+JVM/Android, `Dispatchers.Default` on iOS (Kotlin/Native has no IO dispatcher). See `db/Dispatchers.kt`.
+
 ## TODOs (next)
 - A **real remote API** behind `SyncUploader` (replacing `SimulatedSyncUploader`) — the last piece to
   make sync truly live; then enable the iOS BGTask path (Info.plist identifier).
-- Offload DB calls to a background dispatcher (add `kotlinx-coroutines-core` to the shared module).
 - Conflict resolution (deterministic).
 - Auth; encrypted local storage for sensitive user settings.
 - (Seed-backed read-only repos — plan/why/profile defaults — stay in-memory until a backend hydrates

@@ -99,6 +99,8 @@ fun WetModeScreen(
     var showExitConfirm by remember { mutableStateOf(false) }
     var showTutorial by remember { mutableStateOf(!tutorialSeen) }
     var sessionTitle by remember { mutableStateOf("") }
+    // Stable timestamp/id for the history record, set on completion so Done can upsert (add effort).
+    var completedAtIso by remember { mutableStateOf("") }
 
     fun monoNow() = SystemClock.elapsedRealtime()
 
@@ -118,8 +120,16 @@ fun WetModeScreen(
     // Persist progress at set granularity (survives process death); clear once the session finishes.
     LaunchedEffect(timer?.setIndex, timer?.completedCount, timer?.isComplete) {
         val t = timer ?: return@LaunchedEffect
-        if (t.isComplete) shared.clearSessionProgress(t.sessionId)
-        else shared.saveSessionProgress(t, restSeconds)
+        if (t.isComplete) {
+            // Record into history on completion (robust to a kill on the summary). Done upserts effort.
+            if (completedAtIso.isEmpty()) {
+                completedAtIso = java.time.LocalDateTime.now().toString()
+                shared.recordCompletedSession(t, sessionTitle.ifEmpty { "Pool · Threshold" }, null, completedAtIso)
+            }
+            shared.clearSessionProgress(t.sessionId)
+        } else {
+            shared.saveSessionProgress(t, restSeconds)
+        }
     }
 
     // 1s monotonic ticker — ACTIVE→OVERTIME at zero; REST auto-starts the next set at zero.
@@ -212,7 +222,7 @@ fun WetModeScreen(
         val t = timer
         when {
             t == null -> Text("…", color = AtlanPalette.TideSoft, modifier = Modifier.align(Alignment.Center))
-            t.isComplete -> SessionSummary(t, language, shared, sessionTitle, onExit, Modifier.align(Alignment.Center))
+            t.isComplete -> SessionSummary(t, language, shared, sessionTitle, completedAtIso, onExit, Modifier.align(Alignment.Center))
             t.isResting -> RestPhase(t, now, language, Modifier.align(Alignment.TopCenter))
             else -> ActiveTimer(t, now, language, Modifier.align(Alignment.TopCenter))
         }
@@ -413,6 +423,7 @@ private fun SessionSummary(
     language: Language,
     shared: AtlanShared,
     sessionTitle: String,
+    completedAtIso: String,
     onExit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -510,14 +521,17 @@ private fun SessionSummary(
         }
         AtlanButton(text = AtlanCopy.get(LocalizedStringKey.WET_MODE_DONE, language),
             onClick = {
-                // Record into Workout History (local-first), then leave.
-                scope.launch {
-                    shared.recordCompletedSession(
-                        t,
-                        sessionTitle.ifEmpty { "Pool · Threshold" },
-                        effort?.let { effortKeys[it] },
-                        java.time.LocalDateTime.now().toString()
-                    )
+                // Session was already recorded on completion; if an effort was picked, upsert it
+                // (same id via completedAtIso). Then leave.
+                if (effort != null && completedAtIso.isNotEmpty()) {
+                    scope.launch {
+                        shared.recordCompletedSession(
+                            t,
+                            sessionTitle.ifEmpty { "Pool · Threshold" },
+                            effortKeys[effort!!],
+                            completedAtIso
+                        )
+                    }
                 }
                 onExit()
             },

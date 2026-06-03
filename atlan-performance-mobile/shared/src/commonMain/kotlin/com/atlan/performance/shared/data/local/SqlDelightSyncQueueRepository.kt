@@ -4,7 +4,9 @@ import com.atlan.performance.shared.data.sync.SyncOperation
 import com.atlan.performance.shared.data.sync.SyncQueueItem
 import com.atlan.performance.shared.data.sync.SyncState
 import com.atlan.performance.shared.db.AtlanDatabase
+import com.atlan.performance.shared.db.ioDispatcher
 import com.atlan.performance.shared.domain.repository.SyncQueueRepository
+import kotlinx.coroutines.withContext
 
 /**
  * Local-first sync queue backed by SQLDelight — rows persist across process death (unlike the
@@ -18,7 +20,7 @@ class SqlDelightSyncQueueRepository(database: AtlanDatabase) : SyncQueueReposito
 
     private val queries = database.syncQueueQueries
 
-    override suspend fun enqueue(item: SyncQueueItem) {
+    override suspend fun enqueue(item: SyncQueueItem) = withContext(ioDispatcher) {
         queries.enqueue(
             id = item.id,
             operation = item.operation.name,
@@ -28,10 +30,11 @@ class SqlDelightSyncQueueRepository(database: AtlanDatabase) : SyncQueueReposito
         )
     }
 
-    override suspend fun pending(): List<SyncQueueItem> =
+    override suspend fun pending(): List<SyncQueueItem> = withContext(ioDispatcher) {
         queries.selectPending(::mapRow).executeAsList()
+    }
 
-    override suspend fun markSynced(id: String) {
+    override suspend fun markSynced(id: String): Unit = withContext(ioDispatcher) {
         queries.updateState(state = SyncState.SYNCED.name, id = id)
     }
 

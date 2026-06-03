@@ -1,8 +1,10 @@
 package com.atlan.performance.shared.data.local
 
 import com.atlan.performance.shared.db.AtlanDatabase
+import com.atlan.performance.shared.db.ioDispatcher
 import com.atlan.performance.shared.domain.model.SessionProgress
 import com.atlan.performance.shared.domain.repository.SessionProgressRepository
+import kotlinx.coroutines.withContext
 
 /**
  * SQLDelight-backed active-session snapshot — survives process death so a session can be resumed
@@ -14,7 +16,7 @@ class SqlDelightSessionProgressRepository(database: AtlanDatabase) : SessionProg
 
     private val queries = database.sessionProgressQueries
 
-    override suspend fun save(progress: SessionProgress) {
+    override suspend fun save(progress: SessionProgress) = withContext(ioDispatcher) {
         queries.upsert(
             sessionId = progress.sessionId,
             setIndex = progress.setIndex.toLong(),
@@ -25,10 +27,11 @@ class SqlDelightSessionProgressRepository(database: AtlanDatabase) : SessionProg
         )
     }
 
-    override suspend fun loadActive(): SessionProgress? =
+    override suspend fun loadActive(): SessionProgress? = withContext(ioDispatcher) {
         queries.selectActive(::mapRow).executeAsOneOrNull()
+    }
 
-    override suspend fun clear(sessionId: String) {
+    override suspend fun clear(sessionId: String): Unit = withContext(ioDispatcher) {
         queries.deleteBySession(sessionId)
     }
 

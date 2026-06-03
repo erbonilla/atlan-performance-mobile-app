@@ -38,6 +38,8 @@ kotlin {
         commonMain.dependencies {
             // Local-first persistence: SQLDelight runtime (platform drivers added per source set).
             implementation(libs.sqldelight.runtime)
+            // Coroutines: background dispatcher for DB IO (see db/Dispatchers.kt).
+            implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

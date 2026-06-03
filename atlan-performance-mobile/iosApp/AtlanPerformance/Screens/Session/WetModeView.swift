@@ -31,6 +31,8 @@ struct WetModeView: View {
     // Optional post-session reflection (perceived effort), recorded into history on Done.
     @State private var effort: Int? = nil
     @State private var sessionTitle = ""
+    // Stable timestamp/id for the history record, set on completion so Done can upsert (add effort).
+    @State private var completedAtIso = ""
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let swipeThreshold: CGFloat = 120
@@ -108,18 +110,28 @@ struct WetModeView: View {
     private func persistProgress() {
         guard let t = timer else { return }
         Task {
-            if t.isComplete { await container.clearSessionProgress(t.sessionId) }
-            else { await container.saveSessionProgress(t, restSeconds: coordinator.restSeconds) }
+            if t.isComplete {
+                // Record into history on completion (robust to a kill on the summary); Done upserts effort.
+                if completedAtIso.isEmpty {
+                    completedAtIso = ISO8601DateFormatter().string(from: Date())
+                    let title = sessionTitle.isEmpty ? "Pool · Threshold" : sessionTitle
+                    await container.recordCompletedSession(t, title: title, perceivedEffort: nil, finishedAtIso: completedAtIso)
+                }
+                await container.clearSessionProgress(t.sessionId)
+            } else {
+                await container.saveSessionProgress(t, restSeconds: coordinator.restSeconds)
+            }
         }
     }
 
-    /// Records the finished session into Workout History (local-first), then leaves.
+    /// Session was already recorded on completion; if an effort was picked, upsert it (same id via
+    /// completedAtIso). Then leave.
     private func finishAndRecord(_ t: WorkoutTimerState) {
         let effortKeys = ["easy", "moderate", "hard"]
-        let effortKey = effort.map { effortKeys[$0] }
-        let iso = ISO8601DateFormatter().string(from: Date())
-        let title = sessionTitle.isEmpty ? "Pool · Threshold" : sessionTitle
-        Task { await container.recordCompletedSession(t, title: title, perceivedEffort: effortKey, finishedAtIso: iso) }
+        if let e = effort, !completedAtIso.isEmpty {
+            let title = sessionTitle.isEmpty ? "Pool · Threshold" : sessionTitle
+            Task { await container.recordCompletedSession(t, title: title, perceivedEffort: effortKeys[e], finishedAtIso: completedAtIso) }
+        }
         coordinator.pop()
     }
 
