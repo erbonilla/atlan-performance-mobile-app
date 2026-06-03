@@ -92,4 +92,11 @@ final class SharedContainer: ObservableObject {
     func workoutHistory() async -> [CompletedSession] {
         (try? await shared.getWorkoutHistory.invoke()) ?? []
     }
+
+    /// Runs the shared drain engine over the persistent sync queue. Returns true when fully drained.
+    /// Upload is simulated this milestone (no backend) — see SyncUploader.
+    @discardableResult
+    func drainSync() async -> Bool {
+        (try? await shared.drainSyncQueue.invoke())?.isFullyDrained ?? false
+    }
 }

@@ -421,6 +421,7 @@ private fun SessionSummary(
     val scope = rememberCoroutineScope()
     var syncState by remember { mutableStateOf(OfflineStatus.SYNC_PENDING) }
     var syncing by remember { mutableStateOf(false) }
+    var synced by remember { mutableStateOf(false) }
     // Optional post-session reflection (perceived effort), recorded into Workout History on Done.
     var effort by remember { mutableStateOf<Int?>(null) }
     val effortKeys = listOf("easy", "moderate", "hard")
@@ -474,14 +475,16 @@ private fun SessionSummary(
             }
         }
 
-        // Offline-resilience surfacing — calm, never red; data is always safe locally.
-        // TODO(sync): drive a real sync-queue drain. Offline in this build → stays safely local.
+        // Offline-resilience surfacing — calm, never red; data is always safe locally. Retry runs the
+        // real shared drain engine over the persistent queue (upload is simulated — no backend yet).
         if (syncing) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(color = AtlanPalette.TideSoft, strokeWidth = 2.dp,
                     modifier = Modifier.size(18.dp))
                 Text("  " + AtlanCopy.get(LocalizedStringKey.WET_MODE_SYNCING, language), color = AtlanPalette.TideSoft)
             }
+        } else if (synced) {
+            AtlanPill(if (es) "Sincronizado" else "Synced")
         } else {
             val failed = syncState == OfflineStatus.SYNC_FAILED_SAVED_LOCALLY
             AtlanPill(AtlanCopy.get(
@@ -497,7 +500,12 @@ private fun SessionSummary(
             )
             TextButton(onClick = {
                 syncing = true
-                scope.launch { delay(1200); syncing = false; syncState = OfflineStatus.SYNC_FAILED_SAVED_LOCALLY }
+                scope.launch {
+                    val result = shared.drainSyncQueue()
+                    syncing = false
+                    if (result.isFullyDrained) synced = true
+                    else syncState = OfflineStatus.SYNC_FAILED_SAVED_LOCALLY
+                }
             }) { Text(AtlanCopy.get(LocalizedStringKey.WET_MODE_RETRY_SYNC, language), color = AtlanPalette.TideSoft) }
         }
         AtlanButton(text = AtlanCopy.get(LocalizedStringKey.WET_MODE_DONE, language),

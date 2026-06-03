@@ -27,6 +27,7 @@ struct WetModeView: View {
     // Offline-resilience surfacing on the summary. Stub until a real sync queue exists.
     @State private var syncState: OfflineStatus = .syncPending
     @State private var syncing = false
+    @State private var synced = false
     // Optional post-session reflection (perceived effort), recorded into history on Done.
     @State private var effort: Int? = nil
     @State private var sessionTitle = ""
@@ -261,6 +262,8 @@ struct WetModeView: View {
                     ProgressView().tint(AtlanColors.tideSoft)
                     Text(localized(.wetModeSyncing, lang)).foregroundColor(AtlanColors.tideSoft)
                 }
+            } else if synced {
+                AtlanPill(text: lang == .es ? "Sincronizado" : "Synced")
             } else {
                 let failed = syncState == .syncFailedSavedLocally
                 AtlanPill(text: localized(failed ? .wetModeOfflineSavedLocally : .wetModeOfflineSyncPending, lang))
@@ -279,12 +282,12 @@ struct WetModeView: View {
     }
 
     private func retrySync() {
-        // TODO(sync): drive a real sync-queue drain. Offline in this build → stays safely local.
+        // Runs the real shared drain engine over the persistent queue (upload simulated — no backend).
         syncing = true
         Task {
-            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            let drained = await container.drainSync()
             syncing = false
-            syncState = .syncFailedSavedLocally
+            if drained { synced = true } else { syncState = .syncFailedSavedLocally }
         }
     }
 

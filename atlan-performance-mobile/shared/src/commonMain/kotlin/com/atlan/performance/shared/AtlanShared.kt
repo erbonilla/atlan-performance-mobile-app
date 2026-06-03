@@ -12,8 +12,10 @@ import com.atlan.performance.shared.db.DatabaseDriverFactory
 import com.atlan.performance.shared.db.createAtlanDatabase
 import com.atlan.performance.shared.domain.usecase.AcceptSessionSwapUseCase
 import com.atlan.performance.shared.domain.usecase.ClearSessionProgressUseCase
+import com.atlan.performance.shared.domain.sync.SimulatedSyncUploader
 import com.atlan.performance.shared.domain.usecase.CompleteOnboardingUseCase
 import com.atlan.performance.shared.domain.usecase.CompleteWorkoutSetUseCase
+import com.atlan.performance.shared.domain.usecase.DrainSyncQueueUseCase
 import com.atlan.performance.shared.domain.usecase.GetTodayDashboardUseCase
 import com.atlan.performance.shared.domain.usecase.GetTodaySessionUseCase
 import com.atlan.performance.shared.domain.usecase.GetTrainingPlanUseCase
@@ -46,6 +48,8 @@ class AtlanShared(databaseDriverFactory: DatabaseDriverFactory) {
     private val syncQueueRepository = SqlDelightSyncQueueRepository(database)
     private val sessionProgressRepository = SqlDelightSessionProgressRepository(database)
     private val workoutHistoryRepository = SqlDelightWorkoutHistoryRepository(database)
+    // No backend in this milestone — a simulated uploader stands in for the real API (see SyncUploader).
+    private val syncUploader = SimulatedSyncUploader()
 
     val completeOnboarding = CompleteOnboardingUseCase(userProfileRepository)
     val getTodayDashboard = GetTodayDashboardUseCase(sessionRepository, trainingPlanRepository)
@@ -62,4 +66,5 @@ class AtlanShared(databaseDriverFactory: DatabaseDriverFactory) {
     val clearSessionProgress = ClearSessionProgressUseCase(sessionProgressRepository)
     val recordCompletedSession = RecordCompletedSessionUseCase(workoutHistoryRepository)
     val getWorkoutHistory = GetWorkoutHistoryUseCase(workoutHistoryRepository)
+    val drainSyncQueue = DrainSyncQueueUseCase(syncQueueRepository, syncUploader)
 }

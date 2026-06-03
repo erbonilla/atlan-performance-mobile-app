@@ -41,11 +41,25 @@ Network must never block Wet Mode. Workout completion writes locally first.
 - `AtlanShared(databaseDriverFactory)` now takes a driver; Android passes
   `DatabaseDriverFactory(applicationContext)`, iOS `DatabaseDriverFactory()`.
 
+## Drain engine + background workers (in progress)
+- **Active-session state** persists for resume + crash recovery (`sessionProgress` table,
+  `SessionProgressRepository`, Resume/Discard dashboard banner).
+- **Workout History** persists finished sessions (`completedSession` table,
+  `WorkoutHistoryRepository`).
+- **Drain engine:** `DrainSyncQueueUseCase` hands each pending item to a `SyncUploader` and marks the
+  accepted ones synced; unaccepted items stay safely pending (never dropped). The only uploader this
+  milestone is `SimulatedSyncUploader` (no backend) — the seam where a real HTTP uploader drops in.
+- **Background workers:** Android `SyncWorker` (`CoroutineWorker`, scheduled with a `CONNECTED`
+  constraint on launch) opens the same DB and runs the drain. iOS drains when the app becomes active
+  (`scenePhase`); `BackgroundSync` (BGTaskScheduler) is the documented background path, not yet
+  registered (needs an Info.plist identifier — see its TODO). The Wet Mode summary's Retry also runs
+  the real engine in the foreground.
+
 ## TODOs (next)
-- Migrate the remaining repositories (profile/plan/session) to SQLDelight, following the sync-queue
-  pattern; persist active-session/timer state for resume + crash recovery.
-- Background sync drain (WorkManager on Android; BackgroundTasks on iOS) + a real remote API.
+- A **real remote API** behind `SyncUploader` (replacing `SimulatedSyncUploader`) — the last piece to
+  make sync truly live; then enable the iOS BGTask path (Info.plist identifier).
 - Offload DB calls to a background dispatcher (add `kotlinx-coroutines-core` to the shared module).
 - Conflict resolution (deterministic).
-- Auth.
-- Encrypted local storage for sensitive user settings.
+- Auth; encrypted local storage for sensitive user settings.
+- (Seed-backed read-only repos — plan/why/profile defaults — stay in-memory until a backend hydrates
+  them; user-generated data already lives in SQLDelight.)

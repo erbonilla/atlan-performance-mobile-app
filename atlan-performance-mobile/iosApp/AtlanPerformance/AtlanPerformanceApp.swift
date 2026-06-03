@@ -9,6 +9,7 @@ struct AtlanPerformanceApp: App {
     @StateObject private var container = SharedContainer()
     @StateObject private var coordinator = AppCoordinator()
     @State private var splashDone = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -56,6 +57,11 @@ struct AtlanPerformanceApp: App {
             .task {
                 try? await Task.sleep(nanoseconds: 800_000_000)
                 withAnimation(.easeOut(duration: 0.45)) { splashDone = true }
+            }
+            // Drain the offline sync queue whenever the app comes to the foreground (the moment a real
+            // backend would be reachable). BGTaskScheduler is the background path — see BackgroundSync.
+            .onChange(of: scenePhase) { phase in
+                if phase == .active { Task { await container.drainSync() } }
             }
         }
     }
