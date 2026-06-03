@@ -1081,11 +1081,18 @@ or "Not now" → back to Settings.
 ### Layout
 FoamWarm: "Optional" eyebrow → title → body → a Paper card of calm value bullets → CTA + "Not now".
 
-### Behaviour (no backend / no infra)
-**Honest by design:** this milestone has no notification/Health wiring, so the CTA does **not** trigger
-an OS prompt. It flips to a calm acknowledgement — "We'll ask you to confirm the permission when it's
-available." TODO: the real prompt + wiring (UserNotifications + WorkManager reminders; HealthKit /
-Health Connect sync). Always skippable; never triggered cold (per the inventory's explicit rule).
+### Behaviour
+- **Notifications — now functional (client-side, no backend).** "Turn on reminders" requests the OS
+  permission (Android `POST_NOTIFICATIONS` via an activity-result launcher on API 33+; iOS
+  `UNUserNotificationCenter.requestAuthorization`) and, on grant, schedules a calm **daily session
+  reminder** (Android WorkManager `PeriodicWorkRequest` → `ReminderWorker` posting on the
+  `atlan_reminders` channel ~7am; iOS `UNCalendarNotificationTrigger` at hour 7, repeating). The
+  acknowledgement is result-aware ("Reminders on…" vs "No problem — you can turn them on anytime in
+  settings"). Reminder copy is bilingual. **Local notifications only — no server push.**
+- **Health — still rationale-only.** No HealthKit / Health Connect wiring yet (entitlements +
+  capabilities); the CTA records intent + a calm acknowledgement. TODO: real sync.
+- Both are always skippable and **never trigger a prompt cold** — the rationale is shown first (per the
+  inventory's explicit rule).
 
 ### Content
 Inline bilingual EN/ES. Calm, non-pressuring — reminders are "gentle, never nagging"; Health is
@@ -1104,7 +1111,9 @@ CTA + "Not now"/"Done" are ≥44/48 targets; bullets read in order.
 
 ### QA Checklist
 Explains value before any prompt ✓ · never fires a system prompt cold ✓ · calm, optional, skippable ✓
-· bilingual ✓ · both variants from one screen ✓ · built green on both platforms ✓.
+· bilingual ✓ · both variants from one screen ✓ · **notifications: real OS permission + daily local
+reminder scheduled on grant** ✓ · Health: rationale-only (TODO real sync) ✓ · built green on both
+platforms ✓.
 
 ---
 

@@ -1,5 +1,9 @@
 package com.atlan.performance.android.screen
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,11 +23,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.atlan.performance.android.design.AtlanBackButton
 import com.atlan.performance.android.design.AtlanButton
 import com.atlan.performance.android.design.AtlanPalette
 import com.atlan.performance.android.design.AtlanType
+import com.atlan.performance.android.work.Reminders
 import com.atlan.performance.shared.domain.model.Language
 
 /** Which optional capability a rationale screen explains. */
@@ -42,7 +48,27 @@ fun PermissionRationaleScreen(
     onBack: () -> Unit
 ) {
     val es = language == Language.ES
+    val context = LocalContext.current
     var acknowledged by remember { mutableStateOf(false) }
+    var enabledNow by remember { mutableStateOf(false) }
+
+    // Notifications: request POST_NOTIFICATIONS (API 33+), then schedule the daily reminder on grant.
+    val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) { Reminders.scheduleDaily(context); enabledNow = true }
+        acknowledged = true
+    }
+    fun enable() {
+        when (kind) {
+            PermissionKind.NOTIFICATIONS -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !Reminders.notificationsAllowed(context)) {
+                    notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    Reminders.scheduleDaily(context); enabledNow = true; acknowledged = true
+                }
+            }
+            PermissionKind.HEALTH -> acknowledged = true
+        }
+    }
 
     val title: String
     val body: String
@@ -118,15 +144,21 @@ fun PermissionRationaleScreen(
         Column(Modifier.weight(1f)) {}
 
         if (acknowledged) {
-            // Honest: no system prompt is fired here — intent only, until the real flow ships.
-            Text(
-                if (es) "Listo. Te avisaremos para confirmar el permiso cuando esté disponible."
-                else "Got it. We'll ask you to confirm the permission when it's available.",
-                color = AtlanPalette.TideDeep
-            )
+            val confirm = when {
+                kind == PermissionKind.NOTIFICATIONS && enabledNow ->
+                    if (es) "Recordatorios activados. Te avisaremos antes de las sesiones — con calma."
+                    else "Reminders on. We'll nudge you before sessions — calm, never nagging."
+                kind == PermissionKind.NOTIFICATIONS ->
+                    if (es) "Sin problema. Puedes activarlos cuando quieras en los ajustes del sistema."
+                    else "No problem. You can turn reminders on anytime in system settings."
+                else ->
+                    if (es) "Listo. Te pediremos confirmar el permiso cuando esté disponible."
+                    else "Got it. We'll ask you to confirm the permission when it's available."
+            }
+            Text(confirm, color = AtlanPalette.TideDeep)
             AtlanButton(text = if (es) "Hecho" else "Done", onClick = onBack)
         } else {
-            AtlanButton(text = cta, onClick = { acknowledged = true }, coral = true)
+            AtlanButton(text = cta, onClick = { enable() }, coral = true)
             Text(
                 if (es) "Ahora no" else "Not now",
                 modifier = Modifier

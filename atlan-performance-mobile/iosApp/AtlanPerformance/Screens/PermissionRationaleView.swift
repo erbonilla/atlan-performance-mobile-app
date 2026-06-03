@@ -8,6 +8,19 @@ struct PermissionRationaleView: View {
     @EnvironmentObject private var coordinator: AppCoordinator
     let kind: PermissionKind
     @State private var acknowledged = false
+    @State private var enabledNow = false
+
+    private func enable(_ es: Bool) {
+        switch kind {
+        case .notifications:
+            NotificationScheduler.enableDailyReminder(isES: es) { granted in
+                enabledNow = granted
+                acknowledged = true
+            }
+        case .health:
+            acknowledged = true
+        }
+    }
 
     var body: some View {
         let es = coordinator.language == .es
@@ -36,13 +49,12 @@ struct PermissionRationaleView: View {
                 .clipShape(RoundedRectangle(cornerRadius: AtlanRadii.lg))
 
                 if acknowledged {
-                    Text(es ? "Listo. Te pediremos confirmar el permiso cuando esté disponible."
-                            : "Got it. We'll ask you to confirm the permission when it's available.")
+                    Text(confirmation(es))
                         .foregroundColor(AtlanColors.tideDeep)
                         .fixedSize(horizontal: false, vertical: true)
                     AtlanButton(title: es ? "Hecho" : "Done", coral: false) { coordinator.pop() }
                 } else {
-                    AtlanButton(title: c.cta, coral: true) { acknowledged = true }
+                    AtlanButton(title: c.cta, coral: true) { enable(es) }
                     Button { coordinator.pop() } label: {
                         Text(es ? "Ahora no" : "Not now")
                             .foregroundColor(AtlanColors.tideDeep)
@@ -55,6 +67,19 @@ struct PermissionRationaleView: View {
             .padding(AtlanSpacing.xl)
         }
         .background(AtlanColors.foamWarm.ignoresSafeArea())
+    }
+
+    private func confirmation(_ es: Bool) -> String {
+        if kind == .notifications && enabledNow {
+            return es ? "Recordatorios activados. Te avisaremos antes de las sesiones — con calma."
+                      : "Reminders on. We'll nudge you before sessions — calm, never nagging."
+        }
+        if kind == .notifications {
+            return es ? "Sin problema. Puedes activarlos cuando quieras en Ajustes."
+                      : "No problem. You can turn reminders on anytime in Settings."
+        }
+        return es ? "Listo. Te pediremos confirmar el permiso cuando esté disponible."
+                  : "Got it. We'll ask you to confirm the permission when it's available."
     }
 
     private struct Content { let title: String; let body: String; let points: [String]; let cta: String }
