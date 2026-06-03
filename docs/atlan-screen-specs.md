@@ -1116,8 +1116,9 @@ The Atlan logo (`assets/atlan_logo_bk.svg`, rendered to a 1024 PNG) is wired as:
 - **In-app brand** — the **Branded Launch** (§14) and **Language Selection** (§1) now show the logo
   badge in place of the earlier text wordmark, on both platforms (`Image("AtlanLogo")` / `painterResource`).
 
-(TODO: flatten the iOS app icon to an opaque AbyssDeep square for App Store submission — the current
-art has transparent corners, which the system masks but the store prefers opaque.)
+The iOS app icon is a **flattened opaque** square (Abyss ground, no alpha channel — store-ready),
+generated from an icon-specific SVG (`assets/atlan_icon_opaque.svg`, an opaque-background variant).
+The in-app logo keeps its transparent circular badge (it sits on the Foam surface).
 
 ---
 

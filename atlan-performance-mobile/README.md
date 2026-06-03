@@ -20,7 +20,9 @@ Shared Core:
 - domain models
 - use cases
 - repository contracts
-- fake local repositories
+- local SQLDelight database (sync queue, session progress, workout history)
+- seed-backed fake repos (plan / why / profile defaults)
+- sync drain engine (pluggable uploader; simulated until a backend exists)
 - seed data
 - localization keys
 - sync contracts
@@ -41,12 +43,12 @@ Platform UI:
 - Kotlin 2.1.0 + Gradle 8.11.1 — resolved automatically via the committed Gradle wrapper.
 
 ## Verify without a full IDE
-The shared KMP core compiles and runs on a desktop **JVM target**, so its logic and the three
-`commonTest` suites can be verified from the command line with **only a JDK 17 installed** — no
-Android Studio, no Xcode, no Android SDK:
+The shared KMP core compiles and runs on a desktop **JVM target**, so its logic and test suites can be
+verified from the command line with **only a JDK 17 installed** — no Android Studio, no Xcode, no
+Android SDK. Persistence tests run against an in-memory SQLite database via the JVM driver:
 
 ```bash
-./gradlew :shared:jvmTest          # compile shared core + run the 3 commonTest suites (JDK-only)
+./gradlew :shared:jvmTest          # compile shared core + run all shared tests (JDK-only)
 ./gradlew :shared:compileKotlinJvm # compile-only check of the shared core (JDK-only)
 ```
 
@@ -95,20 +97,33 @@ environment has a minimal PATH.) The app launches to **Language Selection**.
 > KMP→Swift generated signature needs a tweak after the first framework build, it lives there.
 
 ## Shared code structure
-`shared/src/commonMain/.../shared/`: `design/`, `domain/{model,repository,usecase}/`, `data/{seed,fake,sync}/`,
-`localization/`, `presentation/`. Tests in `commonTest/`. Platform `Platform` in `androidMain` / `iosMain` / `jvmMain` (the JVM actual backs IDE-free verification).
+`shared/src/commonMain/.../shared/`: `design/`, `domain/{model,repository,usecase,sync}/`,
+`data/{seed,fake,local,sync}/`, `db/` (SQLDelight + driver factory + IO dispatcher), `localization/`,
+`presentation/`, with `.sq` schema under `commonMain/sqldelight/`. Tests in `commonTest/` + `jvmTest/`
+(persistence). Platform expect/actuals in `androidMain` / `iosMain` / `jvmMain` (the JVM actual backs
+IDE-free verification, incl. the in-memory SQLite driver).
 
-## Implemented in this first setup
-- KMP shared module: domain models, 8 use cases, repository interfaces, fake in-memory repos, seed data,
-  sync-queue types, bilingual copy, presentation state, design-token constants.
-- Three shared tests (swap-without-shame, dashboard shape, localization parity).
-- Android Compose app: theme, custom Atlan components, route navigation, all 10 screens.
-- iOS SwiftUI app: design tokens, components, coordinator navigation, all 10 screens, KMP bridge.
-- Six product/architecture docs.
+## Implemented
+- **KMP shared module:** domain models, use cases, repository interfaces, bilingual copy, presentation
+  state, design tokens, sync contracts. **Local SQLDelight database** backs user-generated data — the
+  sync queue, active-session progress, and workout history — with a cross-platform `DatabaseDriverFactory`
+  and an IO dispatcher; seed-backed fakes still serve the read-only plan/why/profile defaults.
+- **Sync drain engine** + platform background workers (Android WorkManager `SyncWorker`; iOS foreground
+  drain + a `BackgroundSync`/BGTask scaffold), with a pluggable `SyncUploader` (simulated — no backend yet).
+- **Shared tests** run via `:shared:jvmTest` — onboarding/dashboard/localization + the timer machine, plus
+  persistence/drain/progress tests against an in-memory SQLite DB.
+- **Android (Compose)** + **iOS (SwiftUI)** apps — 21 documented screens (see
+  [`../docs/atlan-screen-specs.md`](../docs/atlan-screen-specs.md)): onboarding (incl. Profile Setup +
+  bootstrap skip), dashboard, session detail, workout prep, the 4-set Wet Mode timer (ready/active/
+  paused/overtime/rest/complete) with Resume/Recovery, session summary + sync states, workout plan,
+  history, progress, settings, why/swapper sheets, gesture tutorial, generic error, branded launch,
+  and notification/health permission-rationale screens. Bilingual EN/ES; branded logo + app icon.
 
 ## Intentionally NOT implemented yet (extension points + TODOs only)
-backend · auth · subscription/billing · analytics SDK · HealthKit · Health Connect · push notifications ·
-real sync · production database · calendar integration. See [`OFFLINE_FIRST.md`](OFFLINE_FIRST.md).
+remote backend / API · auth · subscription/billing · analytics SDK · **real** HealthKit / Health Connect
+sync · **real** push/local-notification scheduling · remote sync (the queue + drain exist; the uploader
+is simulated) · calendar integration. The rationale screens for notifications/health are built but never
+trigger an OS prompt. See [`OFFLINE_FIRST.md`](OFFLINE_FIRST.md).
 
 ## Product guardrails
 No streaks, leaderboards, peer ranking, red missed-session states, or "behind plan" language anywhere.
