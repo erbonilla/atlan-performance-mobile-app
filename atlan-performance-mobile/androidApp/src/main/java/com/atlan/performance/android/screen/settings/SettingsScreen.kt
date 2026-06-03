@@ -46,7 +46,8 @@ fun SettingsScreen(
     restSeconds: Int,
     onRestSecondsChange: (Int) -> Unit,
     onHowItWorks: () -> Unit,
-    onHistory: () -> Unit
+    onHistory: () -> Unit,
+    onProgress: () -> Unit
 ) {
     val es = language == Language.ES
     val displayRows = if (es) listOf(
@@ -102,6 +103,17 @@ fun SettingsScreen(
                 .semantics { role = Role.Button }
         ) {
             Text(if (es) "Historial de entrenos" else "Workout history",
+                color = AtlanPalette.Abyss, modifier = Modifier.weight(1f))
+            Text("›", color = AtlanPalette.TideDeep)
+        }
+
+        // Progress overview — calm training summary from local history.
+        PaperRow(
+            modifier = Modifier
+                .clickable(onClick = onProgress)
+                .semantics { role = Role.Button }
+        ) {
+            Text(if (es) "Progreso" else "Progress",
                 color = AtlanPalette.Abyss, modifier = Modifier.weight(1f))
             Text("›", color = AtlanPalette.TideDeep)
         }

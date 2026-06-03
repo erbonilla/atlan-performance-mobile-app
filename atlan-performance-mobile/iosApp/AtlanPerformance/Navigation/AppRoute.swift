@@ -14,4 +14,5 @@ enum AppRoute: Hashable {
     case settings
     case howItWorks
     case history
+    case progress
 }

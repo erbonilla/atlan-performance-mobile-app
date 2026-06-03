@@ -68,6 +68,16 @@ struct SettingsView: View {
                 }
                 .buttonStyle(AtlanPressStyle())
 
+                // Progress overview — calm training summary from local history.
+                Button { coordinator.go(.progress) } label: {
+                    paperRow {
+                        Text(isES ? "Progreso" : "Progress").foregroundColor(AtlanColors.abyss)
+                        Spacer()
+                        Text("›").foregroundColor(AtlanColors.tideDeep)
+                    }
+                }
+                .buttonStyle(AtlanPressStyle())
+
                 // Education — opens the How It Works primer.
                 Button { coordinator.go(.howItWorks) } label: {
                     paperRow {

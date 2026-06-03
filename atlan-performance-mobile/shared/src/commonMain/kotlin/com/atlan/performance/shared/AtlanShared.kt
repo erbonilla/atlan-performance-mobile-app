@@ -18,6 +18,7 @@ import com.atlan.performance.shared.domain.usecase.CompleteWorkoutSetUseCase
 import com.atlan.performance.shared.domain.usecase.DrainSyncQueueUseCase
 import com.atlan.performance.shared.domain.usecase.GetTodayDashboardUseCase
 import com.atlan.performance.shared.domain.usecase.GetTodaySessionUseCase
+import com.atlan.performance.shared.domain.usecase.GetProgressOverviewUseCase
 import com.atlan.performance.shared.domain.usecase.GetTrainingPlanUseCase
 import com.atlan.performance.shared.domain.usecase.GetWhyConceptUseCase
 import com.atlan.performance.shared.domain.usecase.GetWorkoutHistoryUseCase
@@ -66,5 +67,6 @@ class AtlanShared(databaseDriverFactory: DatabaseDriverFactory) {
     val clearSessionProgress = ClearSessionProgressUseCase(sessionProgressRepository)
     val recordCompletedSession = RecordCompletedSessionUseCase(workoutHistoryRepository)
     val getWorkoutHistory = GetWorkoutHistoryUseCase(workoutHistoryRepository)
+    val getProgressOverview = GetProgressOverviewUseCase(workoutHistoryRepository)
     val drainSyncQueue = DrainSyncQueueUseCase(syncQueueRepository, syncUploader)
 }

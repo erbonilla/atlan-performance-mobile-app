@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.atlan.performance.android.screen.HistoryScreen
 import com.atlan.performance.android.screen.HowItWorksScreen
+import com.atlan.performance.android.screen.ProgressScreen
 import com.atlan.performance.android.screen.dashboard.TodayDashboardScreen
 import com.atlan.performance.android.screen.onboarding.CalibrationScreen
 import com.atlan.performance.android.screen.onboarding.LanguageSelectionScreen
@@ -140,7 +141,8 @@ fun AtlanNavGraph(shared: AtlanShared) {
             restSeconds = restSeconds,
             onRestSecondsChange = { setRestSeconds(it) },
             onHowItWorks = { route = AtlanRoute.HOW_IT_WORKS },
-            onHistory = { route = AtlanRoute.HISTORY }
+            onHistory = { route = AtlanRoute.HISTORY },
+            onProgress = { route = AtlanRoute.PROGRESS }
         )
 
         AtlanRoute.HOW_IT_WORKS -> HowItWorksScreen(
@@ -149,6 +151,12 @@ fun AtlanNavGraph(shared: AtlanShared) {
         )
 
         AtlanRoute.HISTORY -> HistoryScreen(
+            shared = shared,
+            language = language,
+            onBack = { route = AtlanRoute.SETTINGS }
+        )
+
+        AtlanRoute.PROGRESS -> ProgressScreen(
             shared = shared,
             language = language,
             onBack = { route = AtlanRoute.SETTINGS }

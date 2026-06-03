@@ -80,6 +80,7 @@ struct AtlanPerformanceApp: App {
         case .settings: SettingsView()
         case .howItWorks: HowItWorksView()
         case .history: HistoryView()
+        case .progress: ProgressView_Atlan()
         }
     }
 }

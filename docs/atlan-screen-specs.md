@@ -961,6 +961,55 @@ both platforms ✓.
 
 ---
 
+## 19. Progress Overview
+
+### Purpose
+A calm, qualitative summary of training over recent sessions — built from the persisted Workout
+History. Reinforces the product stance: progress is a *pattern*, not a number to defend.
+
+### Entry Points
+"Progress" / "Progreso" row in Settings. Routes: `PROGRESS` / `.progress`.
+
+### Exit Points
+Back → `settings`.
+
+### Layout
+FoamWarm scroll: back → "Progress"/"Progreso" → a **Consistency** Paper card ("N sessions · M sets",
+"X complete · Y adjusted") → an optional **Perceived effort** card (Easy/Moderate/Hard counts, shown
+only when effort was logged) → a quiet closing line ("Progress is a pattern, not a number to defend").
+Empty → reassuring "No progress yet" card.
+
+### Content / State
+`ProgressOverview` from `GetProgressOverviewUseCase`, aggregating `WorkoutHistoryRepository.recent()`:
+session count, sets completed, full vs **adjusted** (ended-early, framed as valid), and the effort
+distribution. (Aggregates over the recent window; full-range is a later refinement.)
+
+### Principle guardrails (enforced)
+**No streak, no consecutive-day counter, no goal deficit, no "behind", no rank, no red.** `ProgressOverview`
+has no field for any of those. Ended-early sessions are "**adjusted**", never "missed"/failed. Counts
+are calm tallies, not pressure. (Asserted structurally + in `ProgressOverviewTest`.)
+
+### States
+- Loading — spinner.
+- Has data — consistency (+ optional effort) cards.
+- **Empty** — reassuring card (first run).
+- No error path (local DB).
+
+### Accessibility
+Cards read top-to-bottom; Dynamic-Type/scalable. Back is a labeled 44/48 target.
+
+### iOS Notes
+`ProgressView_Atlan` (named to avoid clashing with SwiftUI's `ProgressView`; `container.progressOverview()`).
+### Android Notes
+`ProgressScreen` (`shared.getProgressOverview()`).
+
+### QA Checklist
+Calm tallies only — no streak/deficit/red ✓ · partials shown as "adjusted" ✓ · effort distribution
+when logged ✓ · reassuring empty state ✓ · proven by `ProgressOverviewTest` + built green on both
+platforms ✓.
+
+---
+
 ## Coverage matrix
 
 | Screen | Loading | Empty | Error | Disabled | Success | Notes |
@@ -982,6 +1031,7 @@ both platforms ✓.
 | How It Works (§16) | — | — | — | — | content | primer + pace explanation; bilingual |
 | Resume / Recovery (§17) | — | (no banner) | — | — | resume / discard | dashboard banner; SQLite-backed, survives process death |
 | Workout History (§18) | ✓ | ✓ (calm) | — | — | list | SQLite-backed; newest-first; partials flagged, not failed |
+| Progress Overview (§19) | ✓ | ✓ (calm) | — | — | summary | calm tallies from history; no streak/deficit/red |
 | Generic Error (§13) | — | — | ✓ (reusable) | — | retry / safe exit | wired to Session Detail; unreachable with fakes |
 
 "Error" states remain intentionally absent across onboarding/dashboard: offline-missing content is a

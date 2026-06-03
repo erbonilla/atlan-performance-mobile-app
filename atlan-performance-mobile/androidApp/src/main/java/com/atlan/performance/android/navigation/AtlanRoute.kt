@@ -17,5 +17,6 @@ enum class AtlanRoute {
     WET_MODE,
     SETTINGS,
     HOW_IT_WORKS,
-    HISTORY
+    HISTORY,
+    PROGRESS
 }
